@@ -1,0 +1,14 @@
+.git
+.tools
+.vscode
+logs
+TASK
+__pycache__
+*.pyc
+*.key
+*.env
+collect_harness_report.py
+start-jiuwenswarm.ps1
+enable-vmp.ps1
+smoke_test.py
+integration_test.py

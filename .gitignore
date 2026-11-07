@@ -1,0 +1,12 @@
+.tools/
+.vscode/
+TASK/
+__pycache__/
+logs/
+*.pyc
+*.env
+*.pem
+*.key
+collect_harness_report.py
+start-jiuwenswarm.ps1
+enable-vmp.ps1
