@@ -3,6 +3,8 @@
 The harness uses the official `openjiuwen` `Model` client for all LLM calls.
 It reads `LLM_BASE_URL` and `LLM_API_KEY` only from the process environment.
 No credentials are included in the image.
+All 172 Python package versions are pinned in `requirements.txt` for Linux
+and Python 3.11, including `openjiuwen==0.1.20`.
 
 Build: `docker build -t nsrc-harness .`
 
