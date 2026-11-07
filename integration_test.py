@@ -6,14 +6,17 @@ import os
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-from run_agent import JiuwenLLM
+from run_agent import BudgetExhausted, JiuwenLLM
 
 
 class Handler(BaseHTTPRequestHandler):
+    last_max_tokens = None
+
     def do_POST(self):
         assert self.path == "/v1/chat/completions", self.path
         size = int(self.headers["Content-Length"])
         request = json.loads(self.rfile.read(size))
+        Handler.last_max_tokens = request.get("max_tokens")
         assert request["model"] == "qwen3.6-35b-a3b-noreason"
         body = json.dumps({
             "id": "chatcmpl-test", "object": "chat.completion", "created": 1,
@@ -45,6 +48,17 @@ async def check():
     answer = await llm.ask("Return 42", "What is the answer?")
     assert answer == "42", answer
     assert llm.spent == 3, llm.spent
+    guarded = JiuwenLLM(budget=30)
+    try:
+        await guarded.ask("Return 42", "What is the answer?", max_tokens=40)
+    except BudgetExhausted:
+        pass
+    else:
+        raise AssertionError("budget guard allowed an oversized call")
+    assert guarded.spent == 0
+    bounded = JiuwenLLM(budget=260)
+    assert await bounded.ask("Return 42", "What is the answer?", max_tokens=400) == "42"
+    assert 32 <= Handler.last_max_tokens < 400, Handler.last_max_tokens
 
 
 try:

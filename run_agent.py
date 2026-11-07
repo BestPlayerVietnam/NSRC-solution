@@ -15,8 +15,11 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
+
+from planner import MODELS, TOKEN_BUDGET, TaskEstimator, impossible_reason
 
 
 def atomic_answer(task_dir: Path, workspace: Path, answer: str) -> None:
@@ -29,6 +32,16 @@ def atomic_answer(task_dir: Path, workspace: Path, answer: str) -> None:
         temp = folder / "answer.txt.tmp"
         temp.write_text(answer + "\n", encoding="utf-8")
         temp.replace(folder / "answer.txt")
+
+
+def record_trace(path: Path, event: dict) -> None:
+    """Write only aggregate decisions; never store prompts, files or API keys."""
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a", encoding="utf-8") as stream:
+            stream.write(json.dumps(event, ensure_ascii=False) + "\n")
+    except OSError:
+        pass
 
 
 def math_answer(instruction: str) -> str | None:
@@ -71,24 +84,44 @@ def math_answer(instruction: str) -> str | None:
 
 
 def csv_answer(instruction: str, workspace: Path) -> str | None:
-    question = re.search(
+    monthly = re.search(
         r"How many units of product ['\"]([^'\"]+)['\"] were sold in months "
         r"(\d+) through (\d+) inclusive\?", instruction, re.I)
-    if not question:
+    by_region = re.search(r"How many units of ['\"]?([A-Za-z]+)['\"]? were sold in "
+                          r"(?:the )?([A-Za-z]+) region\?", instruction, re.I)
+    average = re.search(r"What is the average price of ['\"]?([A-Za-z]+)['\"]? orders\?",
+                        instruction, re.I)
+    if not (monthly or by_region or average):
         return None
     files = list(workspace.glob("*.csv"))
     if len(files) != 1:
         return None
-    product, low, high = question.groups()
-    lo, hi = int(low), int(high)
     with files[0].open(newline="", encoding="utf-8-sig") as stream:
         rows = csv.DictReader(stream)
-        if not {"product", "month", "units"}.issubset(rows.fieldnames or []):
+        fields = set(rows.fieldnames or [])
+        if monthly:
+            if not {"product", "month", "units"}.issubset(fields):
+                return None
+            product, low, high = monthly.groups()
+            lo, hi = int(low), int(high)
+            return str(sum(int(row["units"]) for row in rows
+                           if row["product"].casefold() == product.casefold()
+                           and lo <= int(row["month"]) <= hi))
+        if by_region:
+            if not {"product", "region", "units"}.issubset(fields):
+                return None
+            product, region = by_region.groups()
+            return str(sum(int(row["units"]) for row in rows
+                           if row["product"].casefold() == product.casefold()
+                           and row["region"].casefold() == region.casefold()))
+        if not {"product", "price"}.issubset(fields):
             return None
-        total = sum(int(row["units"]) for row in rows
-                    if row["product"].casefold() == product.casefold()
-                    and lo <= int(row["month"]) <= hi)
-    return str(total)
+        prices = [float(row["price"]) for row in rows
+                  if row["product"].casefold() == average.group(1).casefold()]
+        if not prices:
+            return None
+        value = sum(prices) / len(prices)
+        return str(int(value)) if value.is_integer() else str(value)
 
 
 def search_answer(instruction: str, workspace: Path) -> str | None:
@@ -132,19 +165,12 @@ def deterministic_answer(task: dict, workspace: Path) -> str | None:
     return None
 
 
-def has_required_files(task: dict, workspace: Path) -> bool:
-    kind = task.get("task_type")
-    if kind == "search":
-        return (workspace / "kb").is_dir()
-    if kind == "data_analysis":
-        return any(workspace.glob("*.csv"))
-    if kind == "coding":
-        return any(workspace.glob("test_*.py")) and any(workspace.glob("*.py"))
-    return True
+class BudgetExhausted(RuntimeError):
+    pass
 
 
 class JiuwenLLM:
-    def __init__(self) -> None:
+    def __init__(self, budget: int = TOKEN_BUDGET) -> None:
         # Import lazily: deterministic tasks work offline and local smoke tests
         # do not need a proxy key. All actual LLM calls use openJiuwen Model.
         # Its default file logger targets ./logs, which is unwritable when the
@@ -163,21 +189,53 @@ class JiuwenLLM:
         self.model = Model(
             ModelClientConfig(client_provider="OpenAI", api_base=base,
                               api_key=os.environ["LLM_API_KEY"], timeout=90),
-            ModelRequestConfig(model="qwen3.6-35b-a3b-noreason"),
+            ModelRequestConfig(model=MODELS["small_plain"]),
         )
+        self.budget = budget
+        self.reserve = min(500.0, max(20.0, budget * 0.005))
         self.spent = 0.0
+        self.call_records: list[dict] = []
+
+    @property
+    def remaining(self) -> float:
+        return max(0.0, self.budget - self.spent - self.reserve)
 
     async def ask(self, system: str, user: str, *, max_tokens: int = 400,
-                  model: str = "qwen3.6-35b-a3b-noreason") -> str:
-        response = await self.model.invoke(
-            [{"role": "system", "content": system}, {"role": "user", "content": user}],
-            model=model, max_tokens=max_tokens, temperature=0, timeout=90,
-        )
+                  model: str = MODELS["small_plain"], min_output_tokens: int = 32) -> str:
+        if model not in MODELS.values():
+            raise ValueError("model is not in the contest allowlist")
+        input_estimate = (len(system) + len(user)) / 35.0
+        available_output = int(self.remaining - input_estimate - 20.0)
+        if available_output < min_output_tokens:
+            raise BudgetExhausted("local token budget guard")
+        max_tokens = min(max_tokens, available_output)
+        worst_case = max_tokens + input_estimate + 20.0
+        # If a request fails after generation starts, usage may be missing.
+        # Charge the worst case until a successful response lets us reconcile.
+        self.spent += worst_case
+        try:
+            response = await self.model.invoke(
+                [{"role": "system", "content": system}, {"role": "user", "content": user}],
+                model=model, max_tokens=max_tokens, temperature=0, timeout=90,
+            )
+        except Exception:
+            self.call_records.append({"model": model, "weighted_tokens": round(worst_case, 1),
+                                      "usage": "worst_case_after_error"})
+            raise
         usage = response.usage_metadata
         if usage:
-            # Provider output_tokens should include reasoning tokens. If a
-            # provider reports them separately, account for the larger value.
-            self.spent += max(usage.output_tokens, usage.reasoning_tokens) + usage.input_tokens / 10
+            output = max(usage.output_tokens, usage.reasoning_tokens)
+            if (usage.reasoning_tokens and usage.total_tokens >=
+                    usage.input_tokens + usage.output_tokens + usage.reasoning_tokens):
+                output = usage.output_tokens + usage.reasoning_tokens
+            actual = output + usage.input_tokens / 10
+            if actual <= 0:
+                actual = max(1.0, len(str(response.content or "")) / 4 + input_estimate)
+        else:
+            actual = max(1.0, len(str(response.content or "")) / 4 + input_estimate)
+        self.spent += actual - worst_case
+        self.call_records.append({"model": model, "weighted_tokens": round(actual, 1),
+                                  "usage": "provider" if usage else "estimated"})
         return str(response.content or "").strip()
 
 
@@ -200,7 +258,8 @@ def task_context(workspace: Path, instruction: str, limit: int = 8500) -> str:
     return "\n".join(parts)[:limit]
 
 
-async def model_answer(llm: JiuwenLLM, task: dict, workspace: Path) -> str | None:
+async def model_answer(llm: JiuwenLLM, task: dict, workspace: Path,
+                       model: str = MODELS["small_plain"]) -> str | None:
     kind = task.get("task_type", "")
     if kind == "data_analysis":
         # The model writes a single SELECT, which is run against an in-memory
@@ -218,9 +277,14 @@ async def model_answer(llm: JiuwenLLM, task: dict, workspace: Path) -> str | Non
         sql = await llm.ask(
             "Write exactly one SQLite SELECT query. Table name is data. Return only SQL, no markdown.",
             f"Columns: {fields}. Numeric-looking values are stored as numeric. Question: {task['instruction']}",
-            max_tokens=180,
+            max_tokens=500 if model in {MODELS["small_reason"], MODELS["large_reason"]} else 180,
+            model=model, min_output_tokens=100 if model in {MODELS["small_reason"], MODELS["large_reason"]} else 64,
         )
-        sql = re.sub(r"^```(?:sql)?|```$", "", sql.strip(), flags=re.I).strip()
+        sql = sql.strip()
+        fenced = re.fullmatch(r"```(?:sql|sqlite)?\s*(.*?)\s*```", sql, re.I | re.S)
+        if fenced:
+            sql = fenced.group(1).strip()
+        sql = sql.removesuffix(";").strip()
         if not re.match(r"^SELECT\b", sql, re.I) or ";" in sql or len(sql) > 600:
             return None
         con = sqlite3.connect(":memory:")
@@ -248,14 +312,21 @@ async def model_answer(llm: JiuwenLLM, task: dict, workspace: Path) -> str | Non
             value = int(value)
         return str(value)
 
+    context = task_context(workspace, task.get("instruction", ""))
     response = await llm.ask(
         "Solve the task from the supplied files. Return exactly the final one-line answer, or UNSOLVABLE if evidence is missing. Do not explain.",
-        f"Instruction: {task.get('instruction', '')}\n\nFiles:\n{task_context(workspace, task.get('instruction', ''))}",
-        max_tokens=220,
+        f"Instruction: {task.get('instruction', '')}\n\nFiles:\n{context}",
+        max_tokens=650 if model in {MODELS["small_reason"], MODELS["large_reason"]} else 220,
+        model=model, min_output_tokens=100 if model in {MODELS["small_reason"], MODELS["large_reason"]} else 32,
     )
     response = response.strip().strip("`").strip()
-    if not response or response == "UNSOLVABLE" or "\n" in response:
+    if not response or re.fullmatch(r"UNSOLVABLE[.!]?", response, re.I) or "\n" in response:
         return None
+    if kind == "search" and response.casefold() not in context.casefold():
+        trimmed = response.rstrip(".")
+        if trimmed.casefold() not in context.casefold():
+            return None
+        response = trimmed
     if task.get("check") == "exact_int":
         numeric = re.fullmatch(r"-?\d+", response)
         if not numeric:
@@ -311,7 +382,8 @@ def try_known_repairs(workspace: Path) -> bool:
     return passing
 
 
-async def solve_coding(llm: JiuwenLLM, task: dict, workspace: Path) -> bool:
+async def solve_coding(llm: JiuwenLLM, task: dict, workspace: Path,
+                       allow_reasoning: bool = True) -> bool:
     passing, feedback = run_tests(workspace)
     if passing:
         return True
@@ -324,32 +396,46 @@ async def solve_coding(llm: JiuwenLLM, task: dict, workspace: Path) -> bool:
     original = source.read_text(encoding="utf-8")
     test_text = "\n".join(p.read_text(encoding="utf-8")[:4500] for p in tests[:3])
     current = original
-    for _ in range(2):
-        candidate = await llm.ask(
-            "Repair the Python module to pass the tests. Return the complete source file only; no markdown or explanation. Do not modify tests.",
-            f"Instruction: {task.get('instruction','')}\n\nCurrent mylib.py:\n{current[:6500]}\n\nTests:\n{test_text}\n\nFailure:\n{feedback}",
-            max_tokens=1500, model="qwen3.8-27b-noreason",
-        )
-        candidate = re.sub(r"^```(?:python)?\s*|\s*```$", "", candidate.strip(), flags=re.I)
-        try:
-            compile(candidate, str(source), "exec")
-        except SyntaxError:
-            feedback = "Generated source has a syntax error"
-            continue
-        source.write_text(candidate + "\n", encoding="utf-8")
-        passing, feedback = run_tests(workspace)
-        if passing:
-            return True
-        current = candidate
-    source.write_text(original, encoding="utf-8")
-    return False
+    verified = False
+    models = [MODELS["large_plain"]]
+    if allow_reasoning:
+        models.append(MODELS["large_reason"])
+    try:
+        for index, model in enumerate(models):
+            candidate = await llm.ask(
+                "Repair the Python module to pass the tests. Return the complete source file only; no markdown or explanation. Do not modify tests.",
+                f"Instruction: {task.get('instruction','')}\n\nCurrent mylib.py:\n{current[:6500]}\n\nTests:\n{test_text}\n\nFailure:\n{feedback}",
+                max_tokens=min(2200, max(350, len(original) // 2 + 250 + index * 500)),
+                model=model, min_output_tokens=max(128, len(original) // 3),
+            )
+            candidate = re.sub(r"^```(?:python)?\s*|\s*```$", "", candidate.strip(), flags=re.I)
+            try:
+                compile(candidate, str(source), "exec")
+            except SyntaxError:
+                feedback = "Generated source has a syntax error"
+                continue
+            source.write_text(candidate + "\n", encoding="utf-8")
+            passing, feedback = run_tests(workspace)
+            if passing:
+                verified = True
+                return True
+            current = candidate
+        return False
+    finally:
+        if not verified:
+            source.write_text(original, encoding="utf-8")
 
 
 async def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--tasks-dir", type=Path, required=True)
     parser.add_argument("--offline", action="store_true", help="test deterministic solvers without API")
+    parser.add_argument("--budget", type=int, default=TOKEN_BUDGET)
+    parser.add_argument("--trace-file", type=Path,
+                        default=Path(os.environ.get("TRACE_FILE", str(Path(tempfile.gettempdir()) / "nsrc-trajectory.jsonl"))))
     args = parser.parse_args()
+    if args.budget <= 0:
+        parser.error("--budget must be positive")
     root = args.tasks_dir.resolve()
     entries = []
     for task_file in sorted(root.glob("*/task.json")):
@@ -370,11 +456,18 @@ async def main() -> None:
         answer = deterministic_answer(task, workspace)
         if answer is not None:
             atomic_answer(task_dir, workspace, answer)
+            record_trace(args.trace_file, {"task_id": task_dir.name, "kind": task.get("task_type"),
+                                           "outcome": "solved_local", "predicted_tokens": 0, "actual_tokens": 0})
             print(f"solved {task_dir.name} locally", flush=True)
-        elif has_required_files(task, workspace):
-            remaining.append((task_dir, workspace, task))
         else:
-            print(f"skipped {task_dir.name}: required files missing", flush=True)
+            reason = impossible_reason(task, workspace)
+            if reason:
+                record_trace(args.trace_file, {"task_id": task_dir.name, "kind": task.get("task_type"),
+                                               "outcome": "impossible", "reason": reason,
+                                               "predicted_tokens": 0, "actual_tokens": 0})
+                print(f"skipped {task_dir.name}: {reason}", flush=True)
+            else:
+                remaining.append((task_dir, workspace, task))
 
     # Known sample-family repairs are attempted before constructing an LLM
     # client. This lets the complete supplied sample set run offline.
@@ -382,6 +475,8 @@ async def main() -> None:
     for task_dir, workspace, task in remaining:
         if task.get("task_type") == "coding" and try_known_repairs(workspace):
             atomic_answer(task_dir, workspace, "DONE")
+            record_trace(args.trace_file, {"task_id": task_dir.name, "kind": "coding",
+                                           "outcome": "solved_local", "predicted_tokens": 0, "actual_tokens": 0})
             print(f"solved {task_dir.name} locally", flush=True)
         else:
             still_remaining.append((task_dir, workspace, task))
@@ -390,29 +485,55 @@ async def main() -> None:
         return
     if not os.environ.get("LLM_BASE_URL") or not os.environ.get("LLM_API_KEY"):
         raise SystemExit("LLM_BASE_URL and LLM_API_KEY are required for remaining tasks")
-    llm = JiuwenLLM()
-    # Simple tasks have the best expected reward per token.  Coding takes
-    # longer, but may be worth high reward after cheap tasks are exhausted.
-    expected_cost = {"math": 110, "search": 150, "data_analysis": 180, "coding": 1800}
-    remaining.sort(key=lambda e: -float(e[2].get("reward", 0)) /
-                   expected_cost.get(e[2].get("task_type"), 500))
-    for task_dir, workspace, task in remaining:
-        if time.monotonic() - start > 3300:
+    llm = JiuwenLLM(args.budget)
+    estimator = TaskEstimator()
+    while remaining and time.monotonic() - start <= 3300:
+        plans = [(estimator.estimate(task, workspace), index)
+                 for index, (_, workspace, task) in enumerate(remaining)]
+        affordable = [(plan, index) for plan, index in plans
+                      if plan.priority > 0 and plan.predicted_tokens * 1.25 < llm.remaining]
+        if not affordable:
+            print("no remaining tasks fit the local token budget", flush=True)
             break
+        plan, index = max(affordable, key=lambda item: item[0].priority)
+        task_dir, workspace, task = remaining.pop(index)
+        before = llm.spent
+        call_start = len(llm.call_records)
+        answer = None
         try:
             if task.get("task_type") == "coding":
-                answer = "DONE" if await solve_coding(llm, task, workspace) else None
+                reasoning = task.get("reward", 0) >= 2 and llm.remaining > max(3000, plan.predicted_tokens * 2)
+                answer = "DONE" if await solve_coding(llm, task, workspace, reasoning) else None
             else:
-                answer = await model_answer(llm, task, workspace)
+                answer = await model_answer(llm, task, workspace, plan.model)
+                if (answer is None and plan.kind in {"math", "search", "data_analysis"}
+                        and plan.reward >= 4 and llm.remaining > max(1500, plan.predicted_tokens * 2)):
+                    reasoning_model = (MODELS["small_reason"] if plan.kind == "data_analysis"
+                                       else MODELS["large_reason"])
+                    answer = await model_answer(llm, task, workspace, reasoning_model)
             if answer is not None:
                 atomic_answer(task_dir, workspace, answer)
                 print(f"solved {task_dir.name} via openJiuwen", flush=True)
             else:
                 print(f"skipped {task_dir.name}", flush=True)
+        except BudgetExhausted:
+            print(f"skipped {task_dir.name}: local token guard", flush=True)
         except Exception as exc:
             print(f"failed {task_dir.name}: {type(exc).__name__}: {exc}", file=sys.stderr, flush=True)
             if re.search(r"\b(?:402|429|quota|budget|insufficient credits)\b", str(exc), re.I):
                 break
+        finally:
+            actual = max(0.0, llm.spent - before)
+            verified = plan.kind == "coding" and answer == "DONE"
+            estimator.observe(plan.kind, actual, answer is not None, verified)
+            record_trace(args.trace_file, {"task_id": task_dir.name, "kind": plan.kind,
+                                           "reward": plan.reward, "model": plan.model,
+                                           "predicted_tokens": round(plan.predicted_tokens, 1),
+                                           "actual_tokens": round(actual, 1),
+                                           "calls": llm.call_records[call_start:],
+                                           "success_probability": round(plan.success_probability, 3),
+                                           "outcome": ("verified" if verified else "answered_unverified")
+                                           if answer is not None else "skipped"})
     print(f"estimated weighted tokens spent: {llm.spent:.1f}", flush=True)
 
 

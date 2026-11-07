@@ -12,3 +12,7 @@ start-jiuwenswarm.ps1
 enable-vmp.ps1
 smoke_test.py
 integration_test.py
+planner_test.py
+calibration_run.py
+CONTEST_STRATEGY.md
+CALIBRATION.md
