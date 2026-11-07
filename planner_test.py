@@ -40,6 +40,20 @@ class PlannerTests(unittest.TestCase):
             task = {"task_type": "coding", "instruction": "Fix mylib.py", "reward": 5}
             self.assertEqual(impossible_reason(task, workspace), "contradictory tests")
 
+    def test_stateful_function_is_not_declared_impossible(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            (workspace / "mylib.py").write_text(
+                "counter = 0\ndef f(x):\n    global counter\n    counter += 1\n    return counter\n",
+                encoding="utf-8")
+            (workspace / "test_mylib.py").write_text(
+                "import mylib as m\n"
+                "def test(self):\n"
+                "    self.assertEqual(m.f(1), 1)\n"
+                "    self.assertEqual(m.f(1), 2)\n", encoding="utf-8")
+            task = {"task_type": "coding", "instruction": "Fix mylib.py", "reward": 5}
+            self.assertIsNone(impossible_reason(task, workspace))
+
     def test_missing_required_csv_column_is_skipped(self):
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp)

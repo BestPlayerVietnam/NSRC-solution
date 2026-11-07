@@ -24,6 +24,8 @@ PRIOR_COST = {"math": 15.0, "search": 20.0, "data_analysis": 45.0,
               "coding": 45.0}
 PRIOR_SUCCESS = {"math": 0.78, "search": 0.73, "data_analysis": 0.68,
                  "coding": 0.53}
+PURE_BUILTINS = {"abs", "all", "any", "enumerate", "float", "int", "len",
+                 "max", "min", "range", "reversed", "sorted", "str", "sum"}
 
 
 @dataclass(frozen=True)
@@ -43,6 +45,36 @@ class TaskPlan:
         return self.reward * self.success_probability / max(1.0, self.predicted_tokens)
 
 
+def obviously_pure_functions(workspace: Path) -> set[str]:
+    source = workspace / "mylib.py"
+    if not source.is_file():
+        return set()
+    try:
+        tree = ast.parse(source.read_text(encoding="utf-8"))
+    except (SyntaxError, OSError):
+        return set()
+    pure = set()
+    for node in tree.body:
+        if not isinstance(node, ast.FunctionDef):
+            continue
+        nodes = list(ast.walk(node))
+        if any(isinstance(n, (ast.Global, ast.Nonlocal, ast.Attribute)) for n in nodes):
+            continue
+        if any(isinstance(n, ast.Subscript) and isinstance(n.ctx, ast.Store) for n in nodes):
+            continue
+        if any(isinstance(n, ast.Call) and
+               (not isinstance(n.func, ast.Name) or n.func.id not in PURE_BUILTINS)
+               for n in nodes):
+            continue
+        arguments = {a.arg for a in node.args.posonlyargs + node.args.args + node.args.kwonlyargs}
+        assigned = {n.id for n in nodes if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Store)}
+        if any(isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load) and
+               n.id not in arguments | assigned | PURE_BUILTINS for n in nodes):
+            continue
+        pure.add(node.name)
+    return pure
+
+
 def impossible_reason(task: dict, workspace: Path) -> str | None:
     """Return only reasons that are evident from local files and task wording."""
     kind = str(task.get("task_type", ""))
@@ -53,9 +85,9 @@ def impossible_reason(task: dict, workspace: Path) -> str | None:
             return "missing tests"
         if not any(p for p in workspace.glob("*.py") if not p.name.startswith("test_")):
             return "missing source"
-        # A pure module function cannot return two different literal results
-        # for the same literal arguments. This catches a common impossible
-        # test construction before any model call.
+        # Only stateless module functions can be ruled out this way. Stateful
+        # functions may legitimately return different values on repeated calls.
+        pure_functions = obviously_pure_functions(workspace)
         expected_by_call: dict[str, object] = {}
         for path in tests:
             try:
@@ -71,7 +103,8 @@ def impossible_reason(task: dict, workspace: Path) -> str | None:
                 if (not isinstance(tested, ast.Call) or
                         not isinstance(tested.func, ast.Attribute) or
                         not isinstance(tested.func.value, ast.Name) or
-                        tested.func.value.id != "m"):
+                        tested.func.value.id != "m" or
+                        tested.func.attr not in pure_functions):
                     continue
                 try:
                     args = tuple(ast.literal_eval(arg) for arg in tested.args)
