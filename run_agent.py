@@ -132,6 +132,17 @@ def deterministic_answer(task: dict, workspace: Path) -> str | None:
     return None
 
 
+def has_required_files(task: dict, workspace: Path) -> bool:
+    kind = task.get("task_type")
+    if kind == "search":
+        return (workspace / "kb").is_dir()
+    if kind == "data_analysis":
+        return any(workspace.glob("*.csv"))
+    if kind == "coding":
+        return any(workspace.glob("test_*.py")) and any(workspace.glob("*.py"))
+    return True
+
+
 class JiuwenLLM:
     def __init__(self) -> None:
         # Import lazily: deterministic tasks work offline and local smoke tests
@@ -207,16 +218,28 @@ async def model_answer(llm: JiuwenLLM, task: dict, workspace: Path) -> str | Non
             return None
         con = sqlite3.connect(":memory:")
         try:
+            steps = 0
+            def limit_query() -> int:
+                nonlocal steps
+                steps += 1
+                return 1 if steps > 500 else 0
+            con.set_progress_handler(limit_query, 1000)
             con.execute("CREATE TABLE data (" + ",".join('"' + x + '"' for x in fields) + ")")
             con.executemany("INSERT INTO data VALUES (" + ",".join("?" for _ in fields) + ")",
-                            [[float(row[x]) if re.fullmatch(r"-?\d+(?:\.\d+)?", row[x] or "") else row[x]
+                            [[int(row[x]) if re.fullmatch(r"-?\d+", row[x] or "") else
+                              float(row[x]) if re.fullmatch(r"-?\d+\.\d+", row[x] or "") else row[x]
                               for x in fields] for row in values])
             result = con.execute(sql).fetchall()
         except sqlite3.Error:
             return None
         finally:
             con.close()
-        return str(result[0][0]) if len(result) == 1 and len(result[0]) == 1 and result[0][0] is not None else None
+        if len(result) != 1 or len(result[0]) != 1 or result[0][0] is None:
+            return None
+        value = result[0][0]
+        if isinstance(value, float) and value.is_integer():
+            value = int(value)
+        return str(value)
 
     response = await llm.ask(
         "Solve the task from the supplied files. Return exactly the final one-line answer, or UNSOLVABLE if evidence is missing. Do not explain.",
@@ -224,7 +247,13 @@ async def model_answer(llm: JiuwenLLM, task: dict, workspace: Path) -> str | Non
         max_tokens=220,
     )
     response = response.strip().strip("`").strip()
-    return response if response and response != "UNSOLVABLE" and "\n" not in response else None
+    if not response or response == "UNSOLVABLE" or "\n" in response:
+        return None
+    if task.get("check") == "exact_int":
+        numeric = re.fullmatch(r"-?\d+", response)
+        if not numeric:
+            return None
+    return response
 
 
 def run_tests(workspace: Path) -> tuple[bool, str]:
@@ -335,8 +364,10 @@ async def main() -> None:
         if answer is not None:
             atomic_answer(task_dir, workspace, answer)
             print(f"solved {task_dir.name} locally", flush=True)
-        else:
+        elif has_required_files(task, workspace):
             remaining.append((task_dir, workspace, task))
+        else:
+            print(f"skipped {task_dir.name}: required files missing", flush=True)
 
     # Known sample-family repairs are attempted before constructing an LLM
     # client. This lets the complete supplied sample set run offline.
@@ -373,6 +404,8 @@ async def main() -> None:
                 print(f"skipped {task_dir.name}", flush=True)
         except Exception as exc:
             print(f"failed {task_dir.name}: {type(exc).__name__}: {exc}", file=sys.stderr, flush=True)
+            if re.search(r"\b(?:402|429|quota|budget|insufficient credits)\b", str(exc), re.I):
+                break
     print(f"estimated weighted tokens spent: {llm.spent:.1f}", flush=True)
 
 
