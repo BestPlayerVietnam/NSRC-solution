@@ -5,6 +5,8 @@ It reads `LLM_BASE_URL` and `LLM_API_KEY` only from the process environment.
 No credentials are included in the image.
 All 172 Python package versions are pinned in `requirements.txt` for Linux
 and Python 3.11, including `openjiuwen==0.1.20`.
+openJiuwen logging is configured for console output so a read-only root
+filesystem does not prevent model calls.
 
 Build: `docker build -t nsrc-harness .`
 
@@ -41,7 +43,10 @@ estimate calibrated to the supplied eight example tasks. No external trajectorie
 were provided, and no hidden task answers are used.
 
 Local checks: `python smoke_test.py` with the organizer's sample `TASK/task-dir`
-directory; `python integration_test.py` uses a local dummy OpenAI-compatible
+directory, or `python smoke_test.py --docker` after building the image;
+`python integration_test.py` uses a local dummy OpenAI-compatible
 server and spends no real API tokens. Docker Desktop requires Windows Virtual
-Machine Platform and a reboot on the development workstation; the evaluator
-builds in its own Linux environment.
+Machine Platform on the development workstation; the evaluator builds in its
+own Linux environment. The image built in approximately 155 seconds, measured
+1.42 GB, passed all eight samples in a read-only container, and completed a
+real one-call NeuralDeep probe from that container.

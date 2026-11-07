@@ -1,6 +1,7 @@
 """Run the supplied eight tasks in an isolated temporary directory."""
 
 import json
+import argparse
 import shutil
 import subprocess
 import sys
@@ -9,12 +10,25 @@ from pathlib import Path
 
 
 SAMPLES = Path(__file__).parent / "TASK" / "task-dir"
+parser = argparse.ArgumentParser()
+parser.add_argument("--docker", action="store_true")
+args = parser.parse_args()
 with tempfile.TemporaryDirectory(prefix="nsrc-sample-") as tmp:
     destination = Path(tmp).resolve() / "tasks"
     shutil.copytree(SAMPLES, destination)
+    if args.docker:
+        command = [
+            "docker", "run", "--rm", "--network", "none", "--read-only",
+            "--tmpfs", "/tmp:rw,size=2g", "--mount",
+            f"type=bind,source={destination},target=/data/tasks",
+            "nsrc-harness:latest", "python", "/app/run_agent.py",
+            "--tasks-dir", "/data/tasks", "--offline",
+        ]
+    else:
+        command = [sys.executable, "-X", "utf8", str(Path(__file__).parent / "run_agent.py"),
+                   "--tasks-dir", str(destination), "--offline"]
     run = subprocess.run(
-        [sys.executable, "-X", "utf8", str(Path(__file__).parent / "run_agent.py"),
-         "--tasks-dir", str(destination), "--offline"],
+        command,
         text=True, capture_output=True, encoding="utf-8", errors="replace", timeout=120,
     )
     print(run.stdout)

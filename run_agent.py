@@ -147,6 +147,13 @@ class JiuwenLLM:
     def __init__(self) -> None:
         # Import lazily: deterministic tasks work offline and local smoke tests
         # do not need a proxy key. All actual LLM calls use openJiuwen Model.
+        # Its default file logger targets ./logs, which is unwritable when the
+        # evaluator starts the image with --read-only and --workdir /app.
+        from openjiuwen.core.common.logging.log_config import configure_log_config
+        configure_log_config({
+            "backend": "default", "level": "ERROR", "output": ["console"],
+            "interface_output": ["console"], "performance_output": ["console"],
+        })
         from openjiuwen.core.foundation.llm.model import Model
         from openjiuwen.core.foundation.llm.schema.config import ModelClientConfig, ModelRequestConfig
 
