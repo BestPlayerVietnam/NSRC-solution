@@ -1,9 +1,7 @@
-# Preserve the recorded hashes of runtime, predictor and experiment inputs.
+# Preserve the recorded hashes of runtime and predictor inputs.
 # Recorded hashes include original line endings and blank-line suffixes.
 * whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
 *.py -text
 *.json -text
-# Unified-diff context lines include a leading space.
-*.patch -text -whitespace
 Dockerfile -text
 requirements-runtime.txt -text
