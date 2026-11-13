@@ -1,65 +1,68 @@
-# NSRC openJiuwen Challenge harness
+# NSRC — готовое решение openJiuwen Challenge
 
-The harness uses the official `openjiuwen` `Model` client for all LLM calls.
-It reads `LLM_BASE_URL` and `LLM_API_KEY` only from the process environment.
-No credentials are included in the image.
-All 172 Python package versions are pinned in `requirements.txt` for Linux
-and Python 3.11, including `openjiuwen==0.1.20`.
-openJiuwen logging is configured for console output so a read-only root
-filesystem does not prevent model calls.
+Харнесс решает задачи по математике, Python, поиску в локальных документах и анализу CSV. Он оценивает расход токенов, выбирает задачи по ожидаемой награде и проверяет результат доступными CPU-инструментами. Все обращения к модели идут через openJiuwen и заданный API-прокси.
 
-Build: `docker build -t nsrc-harness .`
+## Запуск на Windows
 
-Run with writable task directories:
+Нужен запущенный Docker Desktop с поддержкой Linux-контейнеров. Python на компьютере для запуска не требуется.
+
+1. Скопируйте [.env.example](.env.example) в `.env` в корне проекта.
+2. Один раз заполните `.env`. `LLM_API_KEY` содержит ваш ключ, `LLM_BASE_URL` — адрес прокси, `BUDGET` — общий бюджет запуска, `TASKS_DIR` — путь к задачам. В примере указаны `https://api.neuraldeep.ru/v1`, бюджет `100000` и каталог `./tasks`. Файл `.env` исключён из Git.
+3. Поместите свежую копию задач в `tasks` либо укажите её путь в `TASKS_DIR`. Файл задания находится по адресу `tasks/<имя задачи>/task.json`. Рабочие файлы размещаются в `workspace`, если этот подкаталог предусмотрен заданием. Для пути Windows используйте прямые слеши, например `TASKS_DIR='C:/Users/name/My tasks'`.
+4. Дважды щёлкните **[start.cmd](start.cmd)**. Он проверит настройки, соберёт образ и запустит агента. Дождитесь завершения в открывшемся окне.
+
+При первом запуске с незаданным подключением создаётся `.env` из примера. Значения окружения имеют приоритет над `.env`.
+
+На Linux выполните ту же команду из каталога проекта.
 
 ```sh
-docker run --rm -e LLM_BASE_URL -e LLM_API_KEY -v "$TASKS:/data/tasks:rw" \
-  --read-only --tmpfs /tmp:rw,size=2g nsrc-harness \
-  python /app/run_agent.py --tasks-dir /data/tasks
+docker compose run --build --rm agent
 ```
 
-The scheduler first solves recognizable math, CSV, and knowledge-base queries
-with exact local code at zero LLM-token cost. It then ranks remaining tasks by
-`reward * estimated_success_probability / predicted_weighted_tokens`, recalculating
-after every model-backed task. The default shared budget is 100,000 weighted
-tokens; `--budget` can override it for local experiments. The model client
-reserves a safety margin and guards every request by its maximum output tokens.
-It records actual usage and updates both cost and answer-rate estimates online.
-For CSV queries outside its local
-pattern, openJiuwen produces a single SQLite SELECT, evaluated on the local CSV.
-For coding tasks, the harness first applies known sample-family function
-repairs and checks the supplied tests. Other coding tasks use openJiuwen to
-propose a full module replacement, then run the tests and try once more using
-test feedback. It restores the original module after unsuccessful attempts.
-Missing files, invalid SQL,
-failing tests, and explicit `UNSOLVABLE` responses are skipped without an answer.
+Первая сборка скачивает закреплённые зависимости; последующие используют Docker-кэш. Во время работы скачивание пакетов и моделей не требуется. Локальный запуск ограничен 4 CPU и 16 ГБ RAM, GPU не нужен.
 
-Each successful answer is written atomically to the task directory and, when
-present, its `workspace` directory, because the regulations describe the former
-while sample instructions describe the latter. No answer is written for failed tasks. The
-sample `expected` field is never read. Output and reasoning tokens count at full
-weight, input tokens at one tenth, using the provider's usage metadata. Calls
-start with a non-reasoning model and may retry high-value failures on a reasoning
-model. All four allowed models are supported. The run stops after 55 minutes to preserve saved answers before
-the one-hour timeout.
+## Где результат
 
-There is no trained cost model yet. The prior cost and answer-rate estimates are
-rule-based and calibrated on the small synthetic set in `calibration_run.py`.
-Per-task predicted
-and actual weighted tokens are written as JSONL to `/tmp/nsrc-trajectory.jsonl`
-by default; `--trace-file` can set a persistent path in development. The trace
-contains no prompts or credentials. Model answers without local verification
-do not increase the learned success rate. See `CONTEST_STRATEGY.md` for the fixed
-contest assumptions and `CALIBRATION.md` for measured trajectories and limits.
+Ответ сохраняется сразу в `answer.txt` в каталоге задачи и её рабочем каталоге. Для Python-задач сохраняются исправленные исходники и `DONE` после прохождения публичных тестов. Итоговую правильность определяют скрытые проверки конкурса. Пропущенная или неуспешная задача остаётся без ответа.
 
-Local checks: `python smoke_test.py` with the organizer's sample `TASK/task-dir`
-directory, or `python smoke_test.py --docker` after building the image;
-`python integration_test.py` uses a local dummy OpenAI-compatible
-server and spends no real API tokens. `python planner_test.py` checks local
-cost estimates and impossibility decisions. `python calibration_run.py` needs Docker
-and the API environment variables, and spends a small amount of real tokens.
-Docker Desktop requires Windows Virtual
-Machine Platform on the development workstation; the evaluator builds in its
-own Linux environment. The image built in approximately 155 seconds, measured
-1.42 GB, passed all eight samples in a read-only container, and completed a
-real one-call NeuralDeep probe from that container.
+Траектория в `TASKS_DIR/nsrc-trajectory.jsonl` содержит прогнозы, расход, причины остановки и результаты проверок. Существующий `answer.txt` означает завершённую задачу. Для независимого повторного прогона используйте свежую копию входных данных.
+
+## Конфигурация релиза
+
+Запуск использует фиксированную **Qwen 3.8 reasoning (`qwen3.8-27b`)**, guarded-предиктор стоимости, адаптивное исправление ошибок, эвристическую оценку продолжения и память подтверждённых инструментальных исправлений. Общий внутренний deadline — **55 минут**.
+
+Временные прогнозы и ограничения API/инструментов работают постоянно. Очередь ранжируется по ценности токенов. В последнем 90-секундном сравнении основная модель получила 25 баллов с этим планированием и 18 с комбинированной оценкой времени. Конфигурация релиза выбрана по этим измерениям.
+
+Бюджет общий на весь запуск одной модели. Входные токены учитываются с весом 0,1, выходные вместе с reasoning — полностью и однократно. Перед каждым физическим запросом резервируется расход. Неизвестный usage сохраняет консервативный резерв. Прогнозы стоимости и успеха эвристические. Формально доказанные противоречия пропускаются, остальные решения о продолжении учитывают наблюдаемый прогресс.
+
+## Запуск проверяющей системой
+
+Проверяющая система запускает `/app/run_agent.py --tasks-dir /data/tasks` в Docker и получает ответы в смонтированных задачах. Она задаёт `TASKS`, `TEAM`, `LLM_BASE_URL`, `LLM_API_KEY` и при необходимости `BUDGET`. Сеть `hack-net` создаёт организатор.
+
+```sh
+docker build -t hack:latest .
+timeout -k 1000s 1h docker run --rm --name "run-${TEAM}" \
+  --network hack-net \
+  -e LLM_BASE_URL -e LLM_API_KEY -e BUDGET \
+  -v "$TASKS:/data/tasks:rw" \
+  --read-only --tmpfs /tmp:rw,size=2g -e HOME=/tmp \
+  --cap-drop ALL --security-opt no-new-privileges \
+  --cpus 8 --memory 16g --pids-limit 512 \
+  --workdir /app --entrypoint python hack:latest \
+  /app/run_agent.py --tasks-dir /data/tasks
+```
+
+Команда регламента выделяет 8 CPU, его таблица ресурсов — 4 CPU. Решение проверено и на 4 CPU. По умолчанию бюджет равен 100000. Переданный `BUDGET` задаёт бюджет текущего запуска.
+
+## Что проверено
+
+Финальное ядро прошло **469 runtime-проверок**, ещё две проверки архивных локальных fixtures пропущены. Пройдены 33 hardening/memory-проверки, все 8 примеров организаторов и интеграция реального SDK с локальным тестовым API. Размер образа — **644 МБ**, исходного пакета — около **2 МБ**.
+
+Холодная сборка предшествующего SLA-образа с теми же зависимостями заняла **821,547 с**. Финальная сборка исходников с готовым кэшем зависимостей — **4,647 с**. Это разные измерения на машине разработки.
+
+В трёх исследованиях SLA учтены **458 API-запросов** и **139805,7 приведённого токена**. Результаты зависят от модели, задач и задержек сервиса. Полная история измерений и ограничения доступны по ссылкам ниже.
+
+- [Техническое устройство, расчёт бюджета и проверки](docs/HARNESS.md).
+- [Решение о конфигурации релиза](experiments/SLA_RELEASE_DECISION_2026-11-14.json).
+- [Последнее сравнение SLA](experiments/SLA_RESULTS_2026-11-13.json).
+- [Пример траектории](docs/trajectory-example.json).

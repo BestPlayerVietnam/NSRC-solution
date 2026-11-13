@@ -1,0 +1,73 @@
+Further primary-source review, 12 November 2026
+
+1. Scout Before You Route (Milios and Pal, submitted 6 Nov 2026)
+https://arxiv.org/abs/2611.09028
+Predicts success and output length separately using a frozen small LLM's
+prefill activations. The paper reports stronger usefulness of query-dependent
+costs for reasoning models. Its predictor requires a neural scout/hidden states,
+which our contest API and prohibition on local neural models do not permit.
+Decision: retain separate per-model cost/outcome labels and CPU-only features;
+do not import its network or claim its savings for our harness.
+
+2. On the Fundamental Limits of Prefill-Based Decoding Length Prediction
+(Shi et al., submitted 29 Oct 2026)
+https://arxiv.org/abs/2610.40541
+Studies stochastic variation in decoding length, and argues for fixed target
+model/data/sampling conditions plus relative and absolute errors. Its theory
+does not establish a numerical error floor for our multi-call agent policies.
+Decision: keep four distinct model scopes, compare predictors on the same
+measured trajectories, report MAE and WAPE, and avoid exact-cost guarantees.
+
+3. Agentic Abstention (Luo et al., NeurIPS 2026 project)
+https://agentic-abstention.github.io/
+Distinguishes request-visible impossibility from blockers revealed by tools,
+and measures the delay before a justified abstention. CONVOLVE transfers a
+playbook of lessons from trajectories. Its displayed heldout intervention is
+on abstention tasks and does not establish preserved solvable-task accuracy.
+Decision: evaluate cost and extra calls on negatives together with positive
+task reward and false hard skips. A classifier saying UNSOLVABLE is not a
+proof. Keep concrete tool feedback/current candidate for repair decisions.
+
+All three are research evidence motivating experiments, not independently
+verified performance claims about our implementation. No third-party code or
+weights from these sources were copied into the production container.
+
+Additional CPU-only research review, 13 November 2026
+
+4. Bayesian Optimization With Censored Response Data
+(Hutter, Hoos, Leyton-Brown, 2013; expanded workshop paper)
+https://arxiv.org/abs/1310.1947
+Uses classical random forests with EM-style sampled imputation from truncated
+predictive distributions to retain lower-bound information from stopped runs.
+Sampling rather than imputing one mean helps retain uncertainty. Its evidence
+concerns algorithm configuration, not Qwen agent token forecasts.
+Our inference: retain stop_cause and trustworthy spent-cost lower bounds for
+future censor-aware fitting. An external interruption of the same fixed policy
+can censor its completion cost. A normal stop prescribed by that policy is an
+observed complete policy cost; finish_reason=length alone is not censoring.
+With very few censored training observations, do not add a survival model now.
+No code copied and no new dependency proposed.
+
+5. Restart Economics for AI Agents: Cutoffs, Retries, and Cost per Resolved Task
+(James E. Murphy, working paper v0.1, 28 September 2026; not peer-reviewed evidence)
+https://jamesemurphy.com/ai-economics/restart-economics/
+https://jamesemurphy.com/ai-economics/restart-economics/restart-economics-ai-agents.pdf
+The primary paper evaluates logged fresh OpenHands attempts with train/heldout
+cross-fitting. A low-complexity state rule combines logistic success prediction
+and quasi-Poisson remaining-cost regression, eight coefficients per configuration.
+It finds little extra value from this rule beyond retries, and documents that its
+commit-to-termination approximation can stop too early. Monetary engineer-fallback
+costs and fresh restarts differ from our lexicographic contest objective and repair
+continuations. Cross-model replay adds an independence assumption not established
+by the logs. These numerical savings must not be transferred to our harness.
+Our possible adaptation: after an actual call, estimate marginal success gain and
+additional cost from visible failure/verification feedback, and compare the use
+of the remaining budget with attempting another task. This needs observed training
+continuations and trustworthy outcome labels; unexecuted retries are not known
+counterfactual outcomes. Public test passing is not hidden correctness.
+The reproducibility section states MIT for code; the source trajectories have no
+declared license and are not redistributed by that repository. No code/data copied.
+
+Decision: first independently evaluate the already-frozen residual predictor;
+only then consider a small predeclared retry-policy experiment. These sources
+motivate tests and failure checks, not a claim that an additional model will help.

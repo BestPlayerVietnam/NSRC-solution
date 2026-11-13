@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import ast
 import csv
+import math
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -37,6 +38,8 @@ class TaskPlan:
     success_probability: float
     model: str
     impossible_reason: str | None = None
+    raw_predicted_tokens: float | None = None
+    policy_id: str = "run-agent-v1"
 
     @property
     def priority(self) -> float:
@@ -76,105 +79,68 @@ def obviously_pure_functions(workspace: Path) -> set[str]:
 
 
 def impossible_reason(task: dict, workspace: Path) -> str | None:
-    """Return only reasons that are evident from local files and task wording."""
-    kind = str(task.get("task_type", ""))
-    instruction = str(task.get("instruction", ""))
-    if kind == "coding":
-        tests = list(workspace.glob("test_*.py"))
-        if not tests:
-            return "missing tests"
-        if not any(p for p in workspace.glob("*.py") if not p.name.startswith("test_")):
-            return "missing source"
-        # Only stateless module functions can be ruled out this way. Stateful
-        # functions may legitimately return different values on repeated calls.
-        pure_functions = obviously_pure_functions(workspace)
-        expected_by_call: dict[str, object] = {}
-        for path in tests:
-            try:
-                tree = ast.parse(path.read_text(encoding="utf-8"))
-            except (SyntaxError, OSError):
-                continue
-            for node in ast.walk(tree):
-                if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
-                    continue
-                if node.func.attr != "assertEqual" or len(node.args) < 2:
-                    continue
-                tested = node.args[0]
-                if (not isinstance(tested, ast.Call) or
-                        not isinstance(tested.func, ast.Attribute) or
-                        not isinstance(tested.func.value, ast.Name) or
-                        tested.func.value.id != "m" or
-                        tested.func.attr not in pure_functions):
-                    continue
-                try:
-                    args = tuple(ast.literal_eval(arg) for arg in tested.args)
-                    expected = ast.literal_eval(node.args[1])
-                except (ValueError, TypeError):
-                    continue
-                key = repr((tested.func.attr, args))
-                if key in expected_by_call and expected_by_call[key] != expected:
-                    return "contradictory tests"
-                expected_by_call[key] = expected
-    elif kind == "data_analysis":
-        files = list(workspace.glob("*.csv"))
-        if not files:
-            return "missing CSV"
-        named = re.findall(r"\b([A-Za-z_][\w-]*\.csv)\b", instruction, re.I)
-        if named and not all((workspace / name).is_file() for name in named):
-            return "named CSV missing"
-        query = re.search(r"How many units of product ['\"][^'\"]+['\"] were sold in months "
-                          r"\d+ through \d+ inclusive\?", instruction, re.I)
-        if query and len(files) == 1:
-            with files[0].open(newline="", encoding="utf-8-sig") as stream:
-                columns = csv.DictReader(stream).fieldnames or []
-            if not {"product", "month", "units"}.issubset(columns):
-                return "required CSV columns missing"
-    elif kind == "search":
-        kb = workspace / "kb"
-        if not kb.is_dir():
-            return "missing knowledge base"
-        born = re.search(r"(?:year was|when was) ([A-Za-z]+ [A-Za-z]+) born", instruction, re.I)
-        employer_hq = re.search(r"headquarters of ([A-Za-z]+ [A-Za-z]+)'s employer", instruction, re.I)
-        match = born or employer_hq
-        if match:
-            path = kb / ("person_" + match.group(1).lower().replace(" ", "_") + ".md")
-            if not path.is_file():
-                return "named person missing"
-            body = path.read_text(encoding="utf-8", errors="replace")
-            if born and not re.search(r"^Born:\s*\d{4}\s*$", body, re.M | re.I):
-                return "birth year missing"
-            if employer_hq:
-                employer = re.search(r"^Employer:\s*(.+?)\s*$", body, re.M | re.I)
-                if not employer:
-                    return "employer missing"
-                company_name = re.sub(r"[^a-z0-9]+", "_", employer.group(1).lower()).strip("_")
-                company = kb / f"company_{company_name}.md"
-                if not company.is_file():
-                    return "employer file missing"
-                if not re.search(r"^Headquarters:\s*.+$", company.read_text(encoding="utf-8", errors="replace"), re.M | re.I):
-                    return "headquarters missing"
-    return None
+    """Hard-skip only a contradiction proved under an explicit task contract.
+
+    Missing familiar filenames/columns or an unsupported local template are
+    reasons to use the general solver, not proofs that no solution exists.
+    Current source purity alone also does not constrain a repaired function.
+    """
+    from feasibility import analyze_task
+    report = analyze_task(task, workspace)
+    return report.reason if report.hard_impossible else None
+
 
 
 class TaskEstimator:
-    def __init__(self) -> None:
-        self.cost_observations: dict[str, list[float]] = {}
-        self.outcome_observations: dict[str, list[bool]] = {}
+    """Calibrate a frozen heuristic within one model and execution policy.
+
+    Costs are ratios to the *unadapted* estimate saved before execution. Answer
+    availability and correctness of an available answer are separate targets.
+    Public tests are useful diagnostics, but are not a hidden correctness label.
+    """
+
+    WINDOW = 12
+    COST_PRIOR_WEIGHT = 3.0
+    OUTCOME_PRIOR_WEIGHT = 4.0
+    TRUSTED_VERIFIERS = frozenset({"official", "oracle", "hidden_tests", "ground_truth"})
+
+    def __init__(self, policy_id: str = "run-agent-v1",
+                 allow_reasoning_retry: bool = True,
+                 initial_model: str = MODELS["large_plain"]) -> None:
+        # Change policy_id when prompts, caps, tools, or retry rules change.
+        self.policy_id = policy_id
+        if initial_model not in MODELS.values():
+            raise ValueError("Unknown initial model")
+        self.initial_model = initial_model
+        self.allow_reasoning_retry = allow_reasoning_retry
+        self.cost_observations: dict[tuple[str, str, str], list[float]] = {}
+        self.outcome_observations: dict[tuple[str, str, str], list[bool]] = {}
+        self.answer_observations: dict[tuple[str, str, str], list[bool]] = {}
+        self._last_plans: dict[str, TaskPlan] = {}
+
+    @staticmethod
+    def _key(plan: TaskPlan) -> tuple[str, str, str]:
+        return plan.kind, plan.model, plan.policy_id
+
+    def _append(self, observations: dict, key: tuple[str, str, str], value) -> None:
+        window = observations.setdefault(key, [])
+        window.append(value)
+        del window[:-self.WINDOW]
 
     def estimate(self, task: dict, workspace: Path) -> TaskPlan:
         kind = str(task.get("task_type", ""))
         instruction = str(task.get("instruction", ""))
         reward = max(0.0, float(task.get("reward", 0)))
         reason = impossible_reason(task, workspace)
+        model = self.initial_model
         base = PRIOR_COST.get(kind, 500.0)
 
-        # Input tokens are discounted 10:1. A conservative four characters
-        # per input token gives about one weighted token per 40 characters.
+        # This is a ranking feature, not an upper bound for budget admission.
         input_cost = len(instruction) / 40.0
         if kind == "coding":
-            source_size = sum(min(p.stat().st_size, 7000) for p in workspace.glob("*.py")
-                              if not p.name.startswith("test_"))
-            test_size = sum(min(p.stat().st_size, 4500) for p in workspace.glob("test_*.py"))
+            source_size = sum(min(p.stat().st_size, 7000) for p in workspace.rglob("*.py")
+                              if not p.is_symlink() and not p.name.startswith("test_") and not any(x in {"tests","test","__pycache__"} or x.startswith(".") for x in p.relative_to(workspace).parts))
+            test_size = sum(min(p.stat().st_size, 4500) for p in workspace.rglob("test_*.py") if not p.is_symlink())
             input_cost += (source_size + test_size) / 40.0
             base += min(2500.0, source_size / 2.5)
         elif kind == "search":
@@ -182,30 +148,96 @@ class TaskEstimator:
                                 if p.is_file() and p.suffix in {".md", ".txt", ".json"})
             input_cost += min(8500, context_bytes) / 40.0
         elif kind == "data_analysis":
-            input_cost += 100.0 / 40.0  # schema rather than full CSV rows
+            input_cost += 100.0 / 40.0
 
-        predicted = base + input_cost
-        if kind == "coding" and reward >= 2:
-            predicted += 20.0 + min(150.0, source_size / 10.0)  # possible reasoning retry
-        elif kind == "data_analysis" and reward >= 4:
-            predicted += 45.0
-        elif kind in {"math", "search"} and reward >= 4:
-            predicted += 5.0
-        observed = self.cost_observations.get(kind, [])[-12:]
-        if observed:
-            # Three virtual observations preserve a useful prior with tiny
-            # sample sizes, while adapting to the actual proxy's usage data.
-            predicted = (3 * predicted + sum(observed)) / (3 + len(observed))
+        # Reward is not a difficulty feature. These thresholds only describe
+        # the legacy executor's explicit eligibility for a reasoning retry.
+        retry_allowed = self.allow_reasoning_retry and (
+            (kind == "coding" and reward >= 2) or
+            (kind in {"math", "search", "data_analysis"} and reward >= 4)
+        )
+        raw_prediction = base + input_cost
+        if retry_allowed:
+            if kind == "coding":
+                raw_prediction += 20.0 + min(150.0, source_size / 10.0)
+            elif kind == "data_analysis":
+                raw_prediction += 45.0
+            else:
+                raw_prediction += 5.0
+
+        policy_id = self.policy_id if self.policy_id.startswith("production-cpu-v3") else f"{self.policy_id}|reasoning_retry={int(retry_allowed)}"
+        key = kind, model, policy_id
+        ratios = self.cost_observations.get(key, [])
+        scale = (self.COST_PRIOR_WEIGHT + sum(ratios)) / (
+            self.COST_PRIOR_WEIGHT + len(ratios))
+        predicted = max(1.0, raw_prediction * scale)
+
         prior_p = PRIOR_SUCCESS.get(kind, 0.40)
-        outcomes = self.outcome_observations.get(kind, [])[-12:]
-        probability = (4 * prior_p + sum(outcomes)) / (4 + len(outcomes))
-        model = MODELS["large_plain"] if kind == "coding" else MODELS["small_plain"]
-        return TaskPlan(str(task.get("task_id", "")), kind, reward,
-                        max(1.0, predicted), probability, model, reason)
+        outcomes = self.outcome_observations.get(key, [])
+        correctness = (self.OUTCOME_PRIOR_WEIGHT * prior_p + sum(outcomes)) / (
+            self.OUTCOME_PRIOR_WEIGHT + len(outcomes))
+        answers = self.answer_observations.get(key, [])
+        availability = (self.OUTCOME_PRIOR_WEIGHT + sum(answers)) / (
+            self.OUTCOME_PRIOR_WEIGHT + len(answers))
+        plan = TaskPlan(
+            str(task.get("task_id", "")), kind, reward, predicted,
+            correctness * availability, model, reason,
+            raw_predicted_tokens=raw_prediction, policy_id=policy_id)
+        self._last_plans[kind] = plan
+        return plan
+
+    def observe_plan(self, snapshot: TaskPlan, weighted_tokens: float | None, *,
+                     usage_status: str = "provider_reconciled",
+                     verdict: bool | None = None,
+                     verifier_kind: str = "unknown",
+                     produced_answer: bool | None = None) -> None:
+        """Observe the selected, pre-execution plan without inventing labels.
+
+        Only reconciled provider usage calibrates cost. A retained reservation
+        remains a budget charge but is not an observed consumption label.
+        Correctness is conditional on an available answer; a known missing
+        answer only updates availability, avoiding two penalties for one event.
+        """
+        if produced_answer is not None and not isinstance(produced_answer, bool):
+            raise ValueError("produced_answer must be bool or None")
+        if verdict is not None and not isinstance(verdict, bool):
+            raise ValueError("verdict must be bool or None")
+        key = self._key(snapshot)
+        if usage_status == "provider_reconciled" and weighted_tokens is not None:
+            raw = snapshot.raw_predicted_tokens
+            if raw is None:
+                raw = snapshot.predicted_tokens  # compatibility with old TaskPlan
+            try:
+                cost, baseline = float(weighted_tokens), float(raw)
+                ratio = cost / baseline if baseline > 0 else float("nan")
+            except (TypeError, ValueError, OverflowError):
+                ratio = float("nan")
+                cost = baseline = float("nan")
+            if (math.isfinite(cost) and cost >= 0 and math.isfinite(baseline)
+                    and baseline > 0 and math.isfinite(ratio)):
+                self._append(self.cost_observations, key, ratio)
+
+        if produced_answer is not None:
+            self._append(self.answer_observations, key, produced_answer)
+        if (verdict is not None and verifier_kind in self.TRUSTED_VERIFIERS
+                and produced_answer is not False):
+            self._append(self.outcome_observations, key, verdict)
 
     def observe(self, kind: str, weighted_tokens: float, produced_answer: bool,
                 verified: bool = False) -> None:
-        if weighted_tokens > 0:
-            self.cost_observations.setdefault(kind, []).append(weighted_tokens)
-            if not produced_answer or verified:
-                self.outcome_observations.setdefault(kind, []).append(produced_answer)
+        """Legacy adapter; new callers must pass their selected plan explicitly.
+
+        This API can only recover the most recent estimate of this kind.
+        Legacy verified meant public tests, so it never supplies a hidden label.
+        """
+        snapshot = self._last_plans.get(kind)
+        if snapshot is None:
+            model = MODELS["large_plain"]
+            raw = PRIOR_COST.get(kind, 500.0)
+            snapshot = TaskPlan(
+                "", kind, 0.0, raw, PRIOR_SUCCESS.get(kind, 0.40), model,
+                raw_predicted_tokens=raw,
+                policy_id=f"{self.policy_id}|reasoning_retry=0")
+        self.observe_plan(
+            snapshot, weighted_tokens, produced_answer=produced_answer,
+            verifier_kind="public_tests" if verified else "unknown")

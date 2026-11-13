@@ -1,0 +1,197 @@
+NSRC: policy and prediction study, 13 November 2026
+
+Budget interpretation
+100,000 weighted tokens per isolated single-model pipeline; unlimited number of
+experiments. No per-task quota. The contest still has one 100k total run budget.
+All prior ledgers are retained; a partial pipeline is never reset.
+
+Final local release
+nsrc-harness:latest now points to immutable image 891fcb81219c...,
+also tagged nsrc-policy-v3-sqlguards:20261113. Default model is fixed
+qwen3.8-27b; retry policy adaptive; cost estimator guarded. Residual is optional.
+196 runtime tests plus 25 hardening tests passed in Linux,0 skips;8/8 organizer
+examples and real openJiuwen SDK with local fake API passed. Image644MB;
+all 14 runtime/artifact and requirements hashes match the tested source.
+The final targeted API probe is complete; no background experiments remain.
+
+Across the main study and both SQL probes:32 completed pipelines,1,636 scheduled
+task episodes,1,908 physical API attempts,885,575.9 charged weighted tokens.
+Every individual pipeline respected 100k; historical cumulative ledgers are
+excluded from these totals and remain unchanged. Charges include conservative
+holds for the25 earlier API errors, not a claim of exactly that much billed usage.
+See runs/2026-11-13-sqlguards/all_study_accounting.json.
+
+Completed main study
+24 pipelines, 1,568 scheduled task episodes, 244 distinct new tasks:
+64 synthetic train +32 calibration +48 family-disjoint synthetic test;
+100 fresh public-source tasks,25 per domain,80 answerable and 20 negatives.
+Sources: GSM8K, HumanEval, SQuAD2, WikiSQL, with authored negative variants.
+Train/calibration/test families are disjoint; public labels never enter fitting.
+All physical requests use the official openJiuwen client and a fixed-model relay.
+
+Main-study accounting:868,422.3 charged weighted tokens across24 independent
+pipelines. Every pipeline is below 100k and has no pending reservations. Public100
+has989 completed physical calls,0 API errors and 0 unknown-usage holds. Earlier
+train/calibration/synthetic phases include25 errors with conservative charges;
+their lower charged cost is not a clean causal savings comparison.
+Accounting: runs/2026-11-13-final/study_accounting.json.
+
+Public100 results, frozen fitted image 1c383913...
+Primary objective: maximize verified reward, break ties by lower token cost.
+Search uses official SQuAD normalized exact match over accepted source spans.
+Coding requires hidden tests; each pipeline attempted all 100 tasks.
+
+Model                    classic reward/cost       adaptive reward/cost
+Qwen 3.6 plain            160 /31,575.5              169 /42,415.1
+Qwen 3.8 plain            170 /16,798.4              168 /24,731.8
+Qwen 3.6 reasoning        148 /92,195.8              153 /89,811.4
+Qwen 3.8 reasoning        175 /66,183.2              178 /67,381.7
+Maximum available reward 247. Adaptive solved57,57,53,60 of80 answerable tasks
+respectively. All pipelines completed, no budget breach. Zero hard skips means
+zero false hard skips here; it does NOT demonstrate useful impossibility coverage.
+
+The best observed configuration is adaptive Qwen 3.8 reasoning,178/247 and 60/80
+for 67,381.7 weighted tokens. This motivates the new CLI model default. Selection
+uses this validation panel; it is not a fresh independent test of that choice.
+The plain3.8 classic policy is a useful cheaper alternative. Adaptive retries
+are not universally better: plain3.8 adaptive loses2 reward and costs7,933.4 more.
+
+Public prediction: same100 observed adaptive trajectories per model; all first
+and total labels reconciled and complete. Total-policy MAE in weighted tokens:
+
+Model                    old heuristic   prompt prior   guarded   residual
+Qwen 3.6 reasoning            750.52          483.03        437.14     352.21
+Qwen 3.6 plain                293.33          307.97        314.85     310.44
+Qwen 3.8 reasoning            527.53          388.42        430.34     442.17
+Qwen 3.8 plain                138.08          165.36        155.07     136.95
+
+Residual minus guarded total MAE, paired source-group bootstrap95% intervals:
+3.6 reasoning: -84.93 [-151.27,-17.49],19.4% lower point MAE.
+3.6 plain:      -4.42 [-21.78,13.15], no clear total-cost improvement.
+3.8 reasoning: +11.83 [-36.21,66.72], worse point MAE.
+3.8 plain:     -18.12 [-29.64,-5.60],11.7% lower point MAE.
+2,000 resamples, seed20261112; no multiple-comparison adjustment.
+
+First-call MAE residual/guarded/prior:
+3.6 reasoning197.67/344.95/405.35;3.6 plain101.48/109.11/105.30;
+3.8 reasoning321.53/303.51/256.04;3.8 plain63.97/65.03/66.03.
+Residual worsens3.8 reasoning against the prompt prior for both heads. It is an
+optional --cost-estimator residual, not a universal default. Guarded remains
+the default estimator in the validated execution configuration. We do not claim
+the learned predictor beats every baseline on every model.
+
+Residual is a10KB stdlib artifact fitted only on the original training split.
+Grouped CV considers the prompt prior plus domain-shrunk robust corrections,
+and scores the same positivity/ordering projection used at inference. These are
+MAE-oriented point forecasts, not expected-cost or coverage guarantees.
+Its forecasts were frozen before reading public labels, but AFTER collection
+started. The comparison is offline on guarded-policy trajectories; changing the
+scheduler to residual was not evaluated by these public execution scores.
+Earlier synthetic results inspired this variant, so its synthetic comparison is
+development evidence. Frozen artifact/source/forecast hashes are retained.
+
+Repeat costs and impossibility
+On public100, adaptive 3.8 reasoning reduces negative continuation cost from
+9,123.7 to 6,097.5, but total cost rises slightly while reward increases3.
+Adaptive3.6 plain increases negative continuation cost 2,960.6 to 9,602.7.
+No blanket claim that impossible-task waste is solved is justified.
+The more general result-constraint checker proved2 training cases but0 heldout
+cases; it remains experimental and is not copied into the production image.
+EBLO offline policy search was uninformative at100k: every candidate selected
+the same feasible full bundle. No mock fitness improvement is claimed.
+
+EBLO review
+Four targeted satisfiable fixtures triggered its hard-impossibility rules:
+Python1/True equality, mutable state, empty-table COUNT=0, quoted text values
+mistaken for column names. Our feasibility checker skipped none of these.
+These are counterexamples, not population error rates. Its mock simulator
+returns full gold answers despite clipped reported output length; its scalar
+reward-minus-token objective differs from the contest reward-first objective.
+No EBLO implementation was copied into runtime. See EBLO_REVIEW.md and
+eblo_counterexamples.json for reproducible details.
+
+Post-validation runtime hardening
+- Local math/CSV/search shortcuts must understand the whole supported question;
+  added conditions defer to the general solver. Conflicting structured fields
+  also defer. Original eight organizer tasks still pass locally.
+- Local parsing/planning/tool errors are isolated per task.
+- Repeated standalone UNSOLVABLE markers stop attempts; mixed prose does not.
+- SQL outer retries preserve the previous query and actual execution error.
+  Previously reasoning retries re-entered model_answer with empty feedback.
+  Seen queries persist within a task, and context is isolated by workspace and
+  exact instruction. No new per-task cap or neural model was introduced.
+- A fresh SQL development probe exposed SQLite integer division in generated
+  weighted-average queries and an abstention string returned as a SQL scalar.
+  The prompt now explains REAL division; exact scalar UNSOLVABLE is a refusal;
+  check=exact_int is enforced with correction feedback. No fuzzy matching or
+  automatic rewriting of generated arithmetic is used.
+
+The final image differs from the frozen image that earned178/247. Its software
+checks and fresh targeted SQL probe are separate records; the old score is not
+retroactively assigned to changed code. Cost weights predate SQL feedback
+hardening and should be recalibrated with further trajectories before claiming
+unchanged prediction accuracy for the revised continuation behavior.
+
+Resource checks
+Frozen fitted cold build:796.875s including base/wheel downloads and image load;
+separate BuildKit bootstrap20.937s. New builder, --pull --no-cache --load.
+First bootstrap attempt timed out before the application build; retained logs
+distinguish it from the successful second attempt. The latter may reuse the
+BuildKit daemon image, but had no application-layer cache.
+Image size644MB by docker images;97 pinned runtime packages; no local neural
+weights; BLAS/OpenMP limited to one thread. The final runtime additions do not
+change dependency installation, but are outside that exact cold-build snapshot.
+This is one machine/network measurement, not a guarantee on another host.
+
+Targeted SQL development probes
+First probe:8 fresh authored cases,6 answerable and 2 missing/contradictory-data
+cases. The image with preserved SQL feedback scored, in model order3.6 plain,
+3.8 plain,3.6 reasoning,3.8 reasoning:6/6,5/6,6/6,5/6 positives. Costs:
+475.8,442.8,5,463.2,1,713.9. The two reasoning arms saved one invalid negative
+answer each. These outcomes exposed integer-division and scalar-marker handling.
+
+After SQL guards, followup retained those8 cases and added a ninth weighted-rate
+case with new table/schema/values. Positive results:7/7,5/7,6/7,7/7; costs:
+689.6,572.5,6,187.1,1,608.7. No negative answer was saved by any model.
+The chosen default3.8 reasoning solved all 7 positives and abstained on both
+negatives. Other models still made arithmetic/semantic errors: prompt guidance
+does not guarantee correct SQL. Both probes completed without API errors.
+Eight followup cases motivated the fix and are reused regressions; only the
+ninth is fresh. This is not an independent population accuracy estimate or a
+causal isolation of each change. Original probe results are preserved.
+
+Limitations of the panel
+Adapted public benchmarks may be in model pretraining. Exact source spans can
+penalize semantically adequate search answers of different lengths. A posthoc
+audit found one source annotation starting inside the number140, labelled
+'40 million years ago'. Primary frozen scores were NOT changed after discovery;
+public100_label_audit.json records the issue. This panel is useful comparative
+evidence, not a representative or noise-free estimate of hidden final accuracy.
+
+SQL audit found nine common positive misses across the three 3.8 configurations:
+six source gold queries use COUNT where natural 'total number of...' wording
+supports SUM; two differ over row count versus the requested Laps value. One
+definite source mismatch, public_875aab8d09299b68, has a hidden gold condition
+Fastest Laps=0 absent from its question; the visible filters return two rows.
+SQLite executed supplied queries correctly. These annotation/wording issues are
+separate from the confirmed lost-feedback bug. Gold and primary scores remain
+unchanged. Future SQL cost studies should render unambiguous questions from
+validated SQL specifications and reserve fresh source tables for evaluation.
+
+The adaptive 3.8 reasoning public gain is one coding task (+1 reward) plus one
+SQL task solved in a single call(+2). The entire +3 is not attributable to retry
+behavior. Every arm attempted all 100 tasks, so the full-budget comparison does
+not establish improved selection when many tasks must be skipped for cost.
+
+Records
+runs/2026-11-12-policy/{fit_record.json, final_report.json, test/uncertainty_report.json}
+runs/2026-11-12-public100/{final_report.json, test/evaluation.json, test/uncertainty_report.json}
+runs/2026-11-13-residual-v1/{freeze_record.json, public_report.json, public_uncertainty_report.json}
+runs/2026-11-13-final/final_image_validation.json
+runs/2026-11-13-sqlguards/sqlguards_image_validation.json
+runs/2026-11-13-sqlguards/latest_promotion.json
+runs/2026-11-13-sql-feedback/test/evaluation.json
+runs/2026-11-13-sql-guards-probe/test/evaluation.json
+RESEARCH_ADDENDUM_2026-11-12.txt contains additional primary-source review and
+why neural scouts, unjustified stopping guarantees and unsupported counterfactual
+replay were not adopted.

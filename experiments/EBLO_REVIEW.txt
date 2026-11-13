@@ -1,0 +1,134 @@
+EBLO review and independent offline experiment — 2026-11-12
+
+Scope
+Reviewed tmp_repo-master without running its evolution or mock proxy. Added only
+experiments/offline_policy_search.py and its contract tests. No model API calls,
+no change to frozen runtime/cost_model.py, and no code copied from EBLO/papers.
+
+What is useful
+- Separate offline configuration search, reproducible export and lineage.
+- Rank by expected reward relative to predicted cost and keep model identity.
+- Inspect static task/workspace features cheaply.
+These are useful design ideas, not evidence that shipped coefficients predict our
+four Qwen variants accurately. The scheduler is greedy ranking, not an exact
+knapsack optimizer (harness/scheduler.py:68-91).
+
+Confirmed limitations in supplied EBLO
+1. Wrong objective for this regulation:
+   eblo/competition_case/fitness.py:27-30 uses reward - 0.01 * cost and calls it
+   official. TASK/Регламент соревнования.md specifies maximum points first,
+   lower token consumption only for equal points. Scalar subtraction may prefer
+   losing one point to saving slightly more than 100 weighted tokens.
+2. No calibrated p90 or trained success probabilities:
+   harness/estimator.py:124-154 uses hand-set feasibility numbers;
+   :173-178 multiplies a linear heuristic by hand/evolved p90 multipliers;
+   :182-195 uses hand-set model success and difficulty penalties.
+   export_to_harness.py:54-95 mutates some offsets/thresholds, not a supervised
+   token-error or quantile objective. Reward-optimized safety margins are not
+   a verified 90th percentile.
+3. Incorrect correctness label in simulator calibration:
+   tools/calibrate_sim.py:94-101 counts an entry in answers as solved; it does
+   not compare the answer with ground truth. Per-call records are loaded and
+   counted (:77-89), but the fitted cost scale is one aggregate total ratio
+   (:159-166), not per-task/per-model supervised regression.
+4. Simulator assumptions can reward unrealistic policies:
+   tournament_sim.py:120-127 assigns difficulty from task-id character sums;
+   :158-165 and :255-268 cache success once per task/model irrespective of
+   changed repair prompts; :217-231 clamps usage to max_tokens but still emits
+   the complete stored solution. Thus cap truncation may retain an answer
+   that a real truncated call would not produce.
+5. Selection on the same surrogate:
+   export_to_harness.py:33 fixes task seed 2026; :121-133 ranks candidates on
+   those same simulated tournaments. The exported 71/80 vs README baseline
+   68/80 is simulator evidence, not independently verified heldout API accuracy.
+   The provided calibration aggregate cites real_run_out.json and .log, but
+   those original files are absent from this supplied package. This limits
+   independent verification; it is not evidence of fabrication.
+6. The generic engine is different from the competition optimizer:
+   eblo/core/engine.py:125-144 synthesizes via an LLM. The competition export
+   path instead performs configuration mutation/crossover against its mock.
+7. License: pyproject.toml:11 declares MIT; no complete LICENSE/COPYING file was
+   found in the supplied inventory. We copied neither implementation nor
+   artifacts. Any future reuse must preserve/verify the actual license.
+
+Implemented experiment
+- Only source_type=real_api rows; exact behavior policy_id; separate models.
+- Separate first-call / full-policy targets, via existing stdlib cost_model.
+  Unknown usage and incomplete totals remain excluded independently.
+- Entire source groups stay together during OOF prediction and train/cal/test
+  checks. Cost candidates are selected by grouped CV MAE.
+- Success model is group-balanced domain shrinkage from oracle/hidden-test
+  verdicts only. Public-test passes and unknown verdicts are not hidden truth.
+- 24 small scheduler configurations use only predicted cost/probability/reward.
+  The objective is lexicographic feasible points, then lower measured cost.
+- Primary budget is 100000 for EACH model pipeline. Smaller 1000/5000/10000
+  budgets are explicitly secondary and do not select the primary winner.
+- Selection never consults actual cost or outcome. Evaluation sums recorded
+  complete trajectories. An over-budget bundle receives budget_valid_reward
+  null: no invented successful prefix, retry, cap or alternative model.
+- Frozen artifact evaluation refuses any train/cal source-group overlap.
+- Historical importer reads only split=train, replicate=0, one explicit policy.
+  Legacy correct abstentions earn no points: success=answerable AND correct.
+- 24 offline tests pass, including float-order invariance for equal bundles.
+
+Historical utility run (NOT new heldout evidence)
+Input: experiments/runs/2026-11-12-v1/results.jsonl
+Policy: bounded-tool-math-v2; 285 imported train rows; no old test/cal labels used.
+Current output:
+  experiments/runs/2026-11-12-offline-eblo-review/fit_v2/offline_artifact.json
+  experiments/runs/2026-11-12-offline-eblo-review/fit_v2/search_report.json
+The earlier fit/ directory is superseded: it exposed float summation order as a
+spurious tie-break. math.fsum plus a regression test fixed that reporting issue.
+
+All four primary searches retain baseline configuration 0 and report
+primary_search_informative=false: every candidate selects the same full eligible
+set within 100000. No scheduler improvement is established.
+Eligible full trajectories and measured total costs:
+  qwen3.6-35b-a3b:           44, 40574.0
+  qwen3.6-35b-a3b-noreason:  80,  7195.7
+  qwen3.8-27b:              80, 25840.6
+  qwen3.8-27b-noreason:     80,  5349.8
+These are different observation panels, so the totals alone are not a paired
+model comparison. Historical benchmark correctness conventions are preserved.
+Several secondary tight-budget bundles overrun their nominal budgets, especially
+reasoning models. Those entries have null valid reward, not fabricated savings.
+OOF errors are development diagnostics, not independent performance estimates.
+
+Commands for new real trajectories
+python -B experiments/offline_policy_search.py fit --train TRAIN.json --calibration CAL.json --policy-id POLICY --out-dir NEW_OUTPUT
+python -B experiments/offline_policy_search.py evaluate --artifact NEW_OUTPUT/offline_artifact.json --test NEW_TEST.json --out NEW_OUTPUT/heldout.json
+python -B -m unittest experiments.offline_policy_search_test
+Input rows add id, reward, source_type='real_api', final_success and verifier_kind
+to the cost_model row contract. Use a new output directory; frozen outputs are
+never silently overwritten.
+
+Primary research, checked 2026-11-12
+- TokenCast, Ouyang et al., September 2026:
+  https://arxiv.org/abs/2609.35760
+  https://arxiv.org/html/2609.35760v2
+  Distinguishes Task Start, Call Start, in-call and task-update predictions.
+  Separate single-call/task costs and cheap execution features are applicable.
+  Its averaged improvements cover multiple observation points. Offline matched
+  trace completion is not hidden-test correctness. We do not import its code.
+  The linked official GitHub was unavailable during this check, so its current
+  code license was not independently reverified here.
+- Dekoninck et al., ICML 2025, A Unified Approach to Routing and Cascading:
+  https://proceedings.mlr.press/v267/dekoninck25a.html
+  Quality estimation is crucial to model routing. This motivates verified
+  outcome labels, not interpreting availability/public checks as correctness.
+- Li et al., WSDM 2011 (revised 2012), Unbiased Offline Evaluation:
+  https://arxiv.org/html/1003.5956v2
+  Unbiased replay has logging/exploration assumptions. Our deterministic
+  trajectories lack observed alternative actions and propensities; we therefore
+  do not claim unbiased counterfactual evaluation or invent unobserved retries.
+- Cawley and Talbot, JMLR 2010:
+  https://www.jmlr.org/papers/v11/cawley10a.html
+  Model-selection criteria themselves can overfit. Small search, group
+  separation and fresh heldout evaluation prevent a simulator winner from
+  being mistaken for demonstrated generalization.
+- Wan et al., June 2026, The Shadow Price of Reasoning:
+  https://arxiv.org/abs/2606.03092
+  Global marginal utility motivates spending extra computation only when its
+  expected reward beats alternatives. Its particular utility curve is not a
+  verified model of our Qwen repair trajectories; no fitted constants copied.
+

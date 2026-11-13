@@ -1,0 +1,309 @@
+{
+  "schema": "eblo-counterexamples-v1",
+  "api_calls": 0,
+  "fixtures_executed": false,
+  "filter_imported": false,
+  "scope": "Targeted counterexamples, not a contest false-positive-rate estimate",
+  "summary": {
+    "cases": 4,
+    "reference_witnesses_passed": 4,
+    "false_hard_flags": 4,
+    "our_hard_impossible": 0
+  },
+  "isolation": {
+    "python_flags": [
+      "-I",
+      "-B"
+    ],
+    "cwd": "temporary fixture directory",
+    "env": "OS allowlist; no API credentials",
+    "audit_blocks": [
+      "network",
+      "subprocess",
+      "file writes"
+    ],
+    "os_sandbox_claimed": false
+  },
+  "source_sha256": {
+    "tmp_repo-master/harness/task_scanner.py": "bfcac0b4acce94dcb96752a1ebdc3344806d563f1068231b5f8c18b8107d7099",
+    "tmp_repo-master/harness/unfeasible_filter.py": "562f89ebd9dba92c03cc8fb844b68cf4d8e5aa8e5767edcdd3d1d538f60b1445",
+    "feasibility.py": "21d5cbafbc80e0964d5d9eb7d8698601df1ea797d5d9bca40846bf630e9acd76",
+    "TASK/Регламент соревнования.md": "f24256eda3d15ffbf6576ce67b8f158dfcb0a1b1e12c5abfd8e8342fff6235fd",
+    "tmp_repo-master/harness/jiuwen_agent.py": "190a658e034f2bc3d0c734873cc7c497255fb0a390d0f82299b62d8c0f3966a2",
+    "tmp_repo-master/harness/budget_ledger.py": "62e084d6f5e5ae3a34a60fde57dda4819bf77117b47ce953a2599186edb82bec",
+    "tmp_repo-master/harness/estimator.py": "942a87d3c3af81d4798c60373676222042c19e0aa7c93711009967f50ba6bd1f",
+    "tmp_repo-master/eblo/competition_case/fitness.py": "c180eb5a1e0c1d9ceb1972fb53844093f493ff87209d4800c58f943365f88fa9",
+    "tmp_repo-master/eblo/competition_case/tournament_sim.py": "547889046a8d660d2500ec0e06edc6a8e5f971454107b8386b1c437249c5d4e5",
+    "tmp_repo-master/tests/test_full_100_sim.py": "92b7d53c5fa9f1e31292794c8f053c61369f9fd3fc50ec8c3637aa3b19c77d8c"
+  },
+  "runtime_before_sha256": {
+    "analytical_tools.py": "1e5b2684d662bcfd31447f32fd3ad85c84c23416eb5d7a2615c1c81a54183e0b",
+    "analytical_tools_test.py": "70371cd58f240de68953dd07fe896f755941369b1cc9a9aba025bad5ff17f823",
+    "budget_runtime.py": "58dea1e80a75aa2fb68c52e33f3913491991516135373aa70564104ed5e130b2",
+    "budget_runtime_test.py": "7e772286afb44fa516af4000b3a142541dc1a56b0fec6313ec5f6e457cb899d2",
+    "calibration_run.py": "8777cf238f91224ac8633f89d7868b50315e29430e8415e4cdccc1ae33169145",
+    "coding_tools.py": "ec2f792eb7d90e960b3624e289da3feb0ca7328f72dc8ed18c6c50eb9b9fe6f9",
+    "coding_tools_test.py": "3a9216d023c89bbf2504fc6200fa21885a9483a840bb7e7ed3495742ed5a316d",
+    "collect_harness_report.py": "d0aaf990006ac78ed476c854a9a170c0890ab3cf1660edbc3ca5f7a3ecbd78aa",
+    "context_tools.py": "21b9f49e2777c568e928d6bb9f21f5e67db5937d1968343cff96ad4e3a9fc03b",
+    "context_tools_test.py": "1ac7298f9c1e9dde6dda4ec6db7f4ee8057f135c39e74b270d9e49393e9f62c8",
+    "cost_model.py": "89a3b92f1694f8cff1f9d33c98d2f2dfd374234994c6b9c6297aa194c475fb5b",
+    "cost_model_test.py": "8224fa45042b891d26df5102671fe4e21c75440125f32f99e429dc47e9d4702c",
+    "feasibility.py": "21d5cbafbc80e0964d5d9eb7d8698601df1ea797d5d9bca40846bf630e9acd76",
+    "feasibility_test.py": "abda194551d64121815199a783ed7ed053dc5fb4bd3a67a772e3e0d2dc9c28e2",
+    "integration_test.py": "19ee402e92f68951daf086abd62de75937e60b990d876362734a27f510012372",
+    "planner.py": "2470794929b7225c0881d99bb2837d599ccb8135b76dacb03f269942b46200ba",
+    "planner_calibration_test.py": "b92c514dcdb5c3cf6385933c36e0bc166edf5a028ee1c0369c1a215319356743",
+    "planner_test.py": "9c5ee6f976d709c164c8d3a5d6f6f2cf57899d6f4b9dde92ad11e6f86333c976",
+    "policy_features.py": "b91f9ccac0b8d0afae8a2a5d115b92b5ace473905a0064522658940749a41376",
+    "production_policy_test.py": "6f88dcfa98329d781a1fb9963c03f84f9375bfdca6b9d3baa4876ac7a086f389",
+    "retry_policy.py": "115bb3c76c13a6bb00945fbb6376d2fb66508432b1a92e91c6193e2be9b5a08a",
+    "retry_policy_test.py": "a92bb01ec2bfcf9329a3400557e1760eedfd218c42b027f43859dc1233597add",
+    "run_agent.py": "4ccb5564a10e732cd90f5e4b79325ac928c6463b561fc76acaad4c819064e059",
+    "smoke_test.py": "e7f0f144cb7a2e637f7aa099482932ee265454cb6e5744bd2112803a65b19709",
+    "Dockerfile": "05f578fe16b446d53bddab73870c729952a1391638a8229e0b23a2a4988586c3"
+  },
+  "runtime_after_sha256": {
+    "analytical_tools.py": "1e5b2684d662bcfd31447f32fd3ad85c84c23416eb5d7a2615c1c81a54183e0b",
+    "analytical_tools_test.py": "70371cd58f240de68953dd07fe896f755941369b1cc9a9aba025bad5ff17f823",
+    "budget_runtime.py": "58dea1e80a75aa2fb68c52e33f3913491991516135373aa70564104ed5e130b2",
+    "budget_runtime_test.py": "7e772286afb44fa516af4000b3a142541dc1a56b0fec6313ec5f6e457cb899d2",
+    "calibration_run.py": "8777cf238f91224ac8633f89d7868b50315e29430e8415e4cdccc1ae33169145",
+    "coding_tools.py": "ec2f792eb7d90e960b3624e289da3feb0ca7328f72dc8ed18c6c50eb9b9fe6f9",
+    "coding_tools_test.py": "3a9216d023c89bbf2504fc6200fa21885a9483a840bb7e7ed3495742ed5a316d",
+    "collect_harness_report.py": "d0aaf990006ac78ed476c854a9a170c0890ab3cf1660edbc3ca5f7a3ecbd78aa",
+    "context_tools.py": "21b9f49e2777c568e928d6bb9f21f5e67db5937d1968343cff96ad4e3a9fc03b",
+    "context_tools_test.py": "1ac7298f9c1e9dde6dda4ec6db7f4ee8057f135c39e74b270d9e49393e9f62c8",
+    "cost_model.py": "89a3b92f1694f8cff1f9d33c98d2f2dfd374234994c6b9c6297aa194c475fb5b",
+    "cost_model_test.py": "8224fa45042b891d26df5102671fe4e21c75440125f32f99e429dc47e9d4702c",
+    "feasibility.py": "21d5cbafbc80e0964d5d9eb7d8698601df1ea797d5d9bca40846bf630e9acd76",
+    "feasibility_test.py": "abda194551d64121815199a783ed7ed053dc5fb4bd3a67a772e3e0d2dc9c28e2",
+    "integration_test.py": "19ee402e92f68951daf086abd62de75937e60b990d876362734a27f510012372",
+    "planner.py": "2470794929b7225c0881d99bb2837d599ccb8135b76dacb03f269942b46200ba",
+    "planner_calibration_test.py": "b92c514dcdb5c3cf6385933c36e0bc166edf5a028ee1c0369c1a215319356743",
+    "planner_test.py": "9c5ee6f976d709c164c8d3a5d6f6f2cf57899d6f4b9dde92ad11e6f86333c976",
+    "policy_features.py": "b91f9ccac0b8d0afae8a2a5d115b92b5ace473905a0064522658940749a41376",
+    "production_policy_test.py": "6f88dcfa98329d781a1fb9963c03f84f9375bfdca6b9d3baa4876ac7a086f389",
+    "retry_policy.py": "115bb3c76c13a6bb00945fbb6376d2fb66508432b1a92e91c6193e2be9b5a08a",
+    "retry_policy_test.py": "a92bb01ec2bfcf9329a3400557e1760eedfd218c42b027f43859dc1233597add",
+    "run_agent.py": "4ccb5564a10e732cd90f5e4b79325ac928c6463b561fc76acaad4c819064e059",
+    "smoke_test.py": "e7f0f144cb7a2e637f7aa099482932ee265454cb6e5744bd2112803a65b19709",
+    "Dockerfile": "05f578fe16b446d53bddab73870c729952a1391638a8229e0b23a2a4988586c3"
+  },
+  "runtime_unchanged": true,
+  "scanner_imports": [
+    "__future__",
+    "ast",
+    "csv",
+    "dataclasses",
+    "json",
+    "os",
+    "pathlib",
+    "re",
+    "typing"
+  ],
+  "unexpected_runtime_imports": [],
+  "cases": [
+    {
+      "id": "compatible_bool_numeric_equality",
+      "eblo_features": {
+        "domain": "coding",
+        "contradictory_asserts": true,
+        "has_syntax_error_in_tests": false,
+        "csv_row_count": 0,
+        "csv_columns": [],
+        "missing_requested_columns": []
+      },
+      "our_feasibility": {
+        "hard_impossible": false,
+        "reason": null,
+        "flags": [],
+        "evidence": [],
+        "retry_hint": "normal"
+      },
+      "domain": "coding",
+      "instruction": "Implement a deterministic, stateless function f(x). The return value must be a built-in int. Return 1 for every x.",
+      "fixture_sources": {
+        "mylib.py": "def f(x):\n    return 1\n",
+        "test_mylib.py": "from mylib import f\n\ndef test_equalities():\n    assert f(5) == 1\n    assert f(5) == True\n"
+      },
+      "fixture_sha256": {
+        "mylib.py": "cbf7f31ddddf942901f6c0a84a1b1aba9914c4a273efc03a936ab623af9344c1",
+        "test_mylib.py": "51a7768dcfb4cc65f88be3948aefa40335a44bee080d5509b31d33ba5968f51c"
+      },
+      "trigger": "contradictory_asserts",
+      "eblo_hard_rule": {
+        "path": "tmp_repo-master/harness/unfeasible_filter.py",
+        "line": 54,
+        "condition": "tf.contradictory_asserts",
+        "tier": 0,
+        "is_feasible": false,
+        "validation": "Actual filter AST; filter not imported",
+        "qualifying_mode": false
+      },
+      "witness": {
+        "satisfiable": true,
+        "expected_answer": [
+          1,
+          1
+        ],
+        "checks_passed": 3,
+        "explanation": "Built-in int 1 compares equal to both 1 and True.",
+        "fixture_code_executed": false
+      },
+      "false_hard_flag": true
+    },
+    {
+      "id": "mutable_stateful_pop",
+      "eblo_features": {
+        "domain": "coding",
+        "contradictory_asserts": true,
+        "has_syntax_error_in_tests": false,
+        "csv_row_count": 0,
+        "csv_columns": [],
+        "missing_requested_columns": []
+      },
+      "our_feasibility": {
+        "hard_impossible": false,
+        "reason": null,
+        "flags": [
+          "explicit_stateful",
+          "incomplete_analysis",
+          "mutable_arguments"
+        ],
+        "evidence": [],
+        "retry_hint": "avoid_expensive_retry"
+      },
+      "domain": "coding",
+      "instruction": "Implement f(items) as a stateful operation: remove and return the first item from the supplied mutable list, updating that list. The return value must be a built-in int.",
+      "fixture_sources": {
+        "mylib.py": "def f(items):\n    return items.pop(0)\n",
+        "test_mylib.py": "from mylib import f\n\ndef test_pop():\n    items = [10, 20]\n    assert f(items) == 10\n    assert f(items) == 20\n    assert items == []\n"
+      },
+      "fixture_sha256": {
+        "mylib.py": "850d55d63b5ef2405dc35be1d2ad3de07b5eb9a6fd2573875bef68a393fe795e",
+        "test_mylib.py": "30e2a8540a2c8efb1c9060c60c4414c40225a0f440add731e5375dc5c5f1a807"
+      },
+      "trigger": "contradictory_asserts",
+      "eblo_hard_rule": {
+        "path": "tmp_repo-master/harness/unfeasible_filter.py",
+        "line": 54,
+        "condition": "tf.contradictory_asserts",
+        "tier": 0,
+        "is_feasible": false,
+        "validation": "Actual filter AST; filter not imported",
+        "qualifying_mode": false
+      },
+      "witness": {
+        "satisfiable": true,
+        "expected_answer": {
+          "returns": [
+            10,
+            20
+          ],
+          "remaining": []
+        },
+        "checks_passed": 3,
+        "explanation": "The same list changes between calls; pop returns 10, then 20.",
+        "fixture_code_executed": false
+      },
+      "false_hard_flag": true
+    },
+    {
+      "id": "empty_csv_count_zero",
+      "eblo_features": {
+        "domain": "data_analysis",
+        "contradictory_asserts": false,
+        "has_syntax_error_in_tests": false,
+        "csv_row_count": 0,
+        "csv_columns": [
+          "product",
+          "units"
+        ],
+        "missing_requested_columns": []
+      },
+      "our_feasibility": {
+        "hard_impossible": false,
+        "reason": null,
+        "flags": [],
+        "evidence": [],
+        "retry_hint": "normal"
+      },
+      "domain": "data_analysis",
+      "instruction": "Count the number of data rows in sales.csv. Return 0 when the table has no data rows.",
+      "fixture_sources": {
+        "sales.csv": "product,units\n"
+      },
+      "fixture_sha256": {
+        "sales.csv": "e42596c25c936fc77b674f2847a6c7c5efc6e3eeaeca81241c1f36d22f615ca0"
+      },
+      "trigger": "empty_csv",
+      "eblo_hard_rule": {
+        "path": "tmp_repo-master/harness/unfeasible_filter.py",
+        "line": 68,
+        "condition": "tf.domain == 'data_analysis' and tf.csv_row_count == 0",
+        "tier": 0,
+        "is_feasible": false,
+        "validation": "Actual filter AST; filter not imported",
+        "qualifying_mode": false
+      },
+      "witness": {
+        "satisfiable": true,
+        "expected_answer": 0,
+        "checks_passed": 1,
+        "explanation": "A header-only CSV has a well-defined row count of zero.",
+        "fixture_code_executed": false
+      },
+      "false_hard_flag": true
+    },
+    {
+      "id": "quoted_value_is_not_column",
+      "eblo_features": {
+        "domain": "data_analysis",
+        "contradictory_asserts": false,
+        "has_syntax_error_in_tests": false,
+        "csv_row_count": 3,
+        "csv_columns": [
+          "product",
+          "units"
+        ],
+        "missing_requested_columns": [
+          "sku_42"
+        ]
+      },
+      "our_feasibility": {
+        "hard_impossible": false,
+        "reason": null,
+        "flags": [],
+        "evidence": [],
+        "retry_hint": "normal"
+      },
+      "domain": "data_analysis",
+      "instruction": "Sum units in sales.csv where product equals 'sku_42'.",
+      "fixture_sources": {
+        "sales.csv": "product,units\nsku_42,3\nsku_43,99\nsku_42,4\n"
+      },
+      "fixture_sha256": {
+        "sales.csv": "b03d46a31f24e8f709a23f262b46e04105f7121b02cf7ed854f8267618361f21"
+      },
+      "trigger": "missing_requested_columns",
+      "eblo_hard_rule": {
+        "path": "tmp_repo-master/harness/unfeasible_filter.py",
+        "line": 61,
+        "condition": "tf.missing_requested_columns",
+        "tier": 0,
+        "is_feasible": false,
+        "validation": "Actual filter AST; filter not imported",
+        "qualifying_mode": false
+      },
+      "witness": {
+        "satisfiable": true,
+        "expected_answer": 7,
+        "checks_passed": 2,
+        "explanation": "'sku_42' is a cell value, not a requested column.",
+        "fixture_code_executed": false
+      },
+      "false_hard_flag": true
+    }
+  ]
+}

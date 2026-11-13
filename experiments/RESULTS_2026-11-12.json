@@ -1,0 +1,40 @@
+{
+  "accounting": {
+    "qwen3.6-35b-a3b-noreason": {
+      "charged": 18582.3,
+      "observed": 17642.4,
+      "held_or_uncertain": 939.9,
+      "remaining": 81417.7,
+      "episodes": 220,
+      "completed_api_calls": 265
+    },
+    "qwen3.8-27b-noreason": {
+      "charged": 16661.0,
+      "observed": 14684.3,
+      "held_or_uncertain": 1976.7,
+      "remaining": 83339.0,
+      "episodes": 220,
+      "completed_api_calls": 240
+    },
+    "qwen3.6-35b-a3b": {
+      "charged": 97998.9,
+      "observed": 91481.3,
+      "held_or_uncertain": 6517.6,
+      "remaining": 2001.1,
+      "episodes": 108,
+      "completed_api_calls": 143
+    },
+    "qwen3.8-27b": {
+      "charged": 61480.4,
+      "observed": 58225.5,
+      "held_or_uncertain": 3254.9,
+      "remaining": 38519.6,
+      "episodes": 211,
+      "completed_api_calls": 221
+    }
+  },
+  "episodes": 759,
+  "completed_api_calls": 869,
+  "errors": 4,
+  "unique_tasks": 200
+}

@@ -1,0 +1,359 @@
+{
+  "schema_version": 1,
+  "policy_id": "production-cpu-v3-fixed",
+  "models": {
+    "qwen3.6-35b-a3b": {
+      "heads": {
+        "first_call": {
+          "method": "input_remaining",
+          "strength": 8.0,
+          "global": 524.05,
+          "domains": {
+            "coding": {
+              "value": 562.6857142857142,
+              "effective_groups": 4.0
+            },
+            "data_analysis": {
+              "value": 525.0547619047619,
+              "effective_groups": 4.0
+            },
+            "math": {
+              "value": 523.8309523809523,
+              "effective_groups": 4.0
+            },
+            "search": {
+              "value": 519.4857142857143,
+              "effective_groups": 4.0
+            }
+          },
+          "groups": 16
+        },
+        "total_policy": {
+          "method": "input_remaining",
+          "strength": 8.0,
+          "global": 524.9285714285713,
+          "domains": {
+            "coding": {
+              "value": 596.1238095238094,
+              "effective_groups": 4.0
+            },
+            "data_analysis": {
+              "value": 526.095238095238,
+              "effective_groups": 4.0
+            },
+            "math": {
+              "value": 524.4166666666666,
+              "effective_groups": 4.0
+            },
+            "search": {
+              "value": 520.0714285714286,
+              "effective_groups": 4.0
+            }
+          },
+          "groups": 16
+        }
+      },
+      "selected_candidates": {
+        "first_call": 9,
+        "total_policy": 9
+      }
+    },
+    "qwen3.6-35b-a3b-noreason": {
+      "heads": {
+        "first_call": {
+          "method": "additive",
+          "strength": 2.0,
+          "global": -8.52857142857144,
+          "domains": {
+            "coding": {
+              "value": 12.214285714285694,
+              "effective_groups": 4.0
+            },
+            "data_analysis": {
+              "value": -11.719047619047624,
+              "effective_groups": 4.0
+            },
+            "math": {
+              "value": -11.761904761904766,
+              "effective_groups": 4.0
+            },
+            "search": {
+              "value": -8.514285714285721,
+              "effective_groups": 4.0
+            }
+          },
+          "groups": 16
+        },
+        "total_policy": {
+          "method": "input_remaining",
+          "strength": 8.0,
+          "global": 14.185714285714287,
+          "domains": {
+            "coding": {
+              "value": 57.423809523809524,
+              "effective_groups": 4.0
+            },
+            "data_analysis": {
+              "value": 24.61904761904762,
+              "effective_groups": 4.0
+            },
+            "math": {
+              "value": 13.11904761904762,
+              "effective_groups": 4.0
+            },
+            "search": {
+              "value": 9.457142857142857,
+              "effective_groups": 4.0
+            }
+          },
+          "groups": 16
+        }
+      },
+      "selected_candidates": {
+        "first_call": 5,
+        "total_policy": 9
+      }
+    },
+    "qwen3.8-27b": {
+      "heads": {
+        "first_call": {
+          "method": "additive",
+          "strength": 0.0,
+          "global": 79.23571428571428,
+          "domains": {
+            "coding": {
+              "value": -145.98571428571432,
+              "effective_groups": 4.0
+            },
+            "data_analysis": {
+              "value": 447.6642857142857,
+              "effective_groups": 4.0
+            },
+            "math": {
+              "value": 53.78571428571428,
+              "effective_groups": 4.0
+            },
+            "search": {
+              "value": 113.57857142857144,
+              "effective_groups": 4.0
+            }
+          },
+          "groups": 16
+        },
+        "total_policy": {
+          "method": "additive",
+          "strength": 0.0,
+          "global": 38.60885714285713,
+          "domains": {
+            "coding": {
+              "value": -219.01428571428573,
+              "effective_groups": 4.0
+            },
+            "data_analysis": {
+              "value": 365.20199999999994,
+              "effective_groups": 4.0
+            },
+            "math": {
+              "value": 13.14085714285713,
+              "effective_groups": 4.0
+            },
+            "search": {
+              "value": 76.345,
+              "effective_groups": 4.0
+            }
+          },
+          "groups": 16
+        }
+      },
+      "selected_candidates": {
+        "first_call": 4,
+        "total_policy": 4
+      }
+    },
+    "qwen3.8-27b-noreason": {
+      "heads": {
+        "first_call": {
+          "method": "additive",
+          "strength": 0.0,
+          "global": -12.25714285714286,
+          "domains": {
+            "coding": {
+              "value": 24.157142857142873,
+              "effective_groups": 4.0
+            },
+            "data_analysis": {
+              "value": -27.96428571428571,
+              "effective_groups": 4.0
+            },
+            "math": {
+              "value": -14.064285714285713,
+              "effective_groups": 4.0
+            },
+            "search": {
+              "value": -8.507142857142863,
+              "effective_groups": 4.0
+            }
+          },
+          "groups": 16
+        },
+        "total_policy": {
+          "method": "input_remaining",
+          "strength": 0.0,
+          "global": 10.62142857142857,
+          "domains": {
+            "coding": {
+              "value": 165.0,
+              "effective_groups": 4.0
+            },
+            "data_analysis": {
+              "value": 12.035714285714288,
+              "effective_groups": 4.0
+            },
+            "math": {
+              "value": 9.935714285714285,
+              "effective_groups": 4.0
+            },
+            "search": {
+              "value": 0.0,
+              "effective_groups": 4.0
+            }
+          },
+          "groups": 16
+        }
+      },
+      "selected_candidates": {
+        "first_call": 4,
+        "total_policy": 7
+      }
+    }
+  },
+  "train_groups": [
+    "coding:comparison_adapter",
+    "coding:explicit_stateful_counter",
+    "coding:ragged_transpose",
+    "coding:unweighted_shortest_path",
+    "data_analysis:anti_join_total",
+    "data_analysis:conditional_distinct",
+    "data_analysis:grouped_maximum",
+    "data_analysis:weighted_average",
+    "math:pack_yield",
+    "math:parallel_trips",
+    "math:recipe_scale",
+    "math:rental_billing",
+    "search:alias_resolution",
+    "search:interval_roster",
+    "search:labelled_route",
+    "search:latest_record"
+  ],
+  "train_ids": [
+    "policy_0816f5d95f86dfea",
+    "policy_08c7b09d6e30f2f6",
+    "policy_09877cb1ccdacad3",
+    "policy_0e484c8ab52f206a",
+    "policy_11c1f14b3575a146",
+    "policy_192a4011c6a02f19",
+    "policy_19c70eff0f2edea8",
+    "policy_1ad839bee9f412ac",
+    "policy_23939cba975eae17",
+    "policy_24de8f5789384804",
+    "policy_275d097f637423bc",
+    "policy_2eb93b6174352313",
+    "policy_322b6e718869a1f8",
+    "policy_334b985f6985cf48",
+    "policy_383f9ff77c9186f9",
+    "policy_46986ade1eeb0cda",
+    "policy_4a20f2af4b438d94",
+    "policy_508c3d7cc986b4e8",
+    "policy_51b9ffb4119535e6",
+    "policy_550bc0b704eae201",
+    "policy_5cb95b73a67b3ea8",
+    "policy_5d0d6f4622dacd77",
+    "policy_5e8011389c893ced",
+    "policy_5f02a79627e2527c",
+    "policy_5f590b3648decb19",
+    "policy_615b121aefb486e1",
+    "policy_62ab3bfa6706510a",
+    "policy_63c614d739c114c5",
+    "policy_65c014cf4f36dfe8",
+    "policy_688df76632c55791",
+    "policy_72f79289ca3ec593",
+    "policy_741fe02e5aa66195",
+    "policy_7ce34151b8ca016c",
+    "policy_8006d2731ea44bc7",
+    "policy_81a2302aad15d423",
+    "policy_8403ae5a4fc952e6",
+    "policy_86eb1dfe67140897",
+    "policy_8867cf1fdb3a4118",
+    "policy_8ac67f83fec94dd6",
+    "policy_8b216d64386221f7",
+    "policy_8fedbb361d3ae462",
+    "policy_905088e9c69305e5",
+    "policy_9a987b5bbaf289f6",
+    "policy_9d6266a857052c36",
+    "policy_ae5b791aa9807ce8",
+    "policy_af6d8c8ff2ece148",
+    "policy_b06008cff45d88df",
+    "policy_b2892b130dfb3311",
+    "policy_bdffc65f2942527e",
+    "policy_c234f7ca3fa51b2e",
+    "policy_c9351fdb9be91e20",
+    "policy_cb533da18cd142b3",
+    "policy_eb8e194320348a9c",
+    "policy_edab0186dd025b3d",
+    "policy_f106b7275c3585a4",
+    "policy_f32083a5bc827188",
+    "policy_f352aa4e2b66f6a0",
+    "policy_f429082c1a8c1c98",
+    "policy_fe1742f9f301565f",
+    "policy_ffd36e729b288c6a"
+  ],
+  "candidates": [
+    {
+      "method": "prior",
+      "shrink": 0.0
+    },
+    {
+      "method": "multiplier",
+      "shrink": 0.0
+    },
+    {
+      "method": "multiplier",
+      "shrink": 2.0
+    },
+    {
+      "method": "multiplier",
+      "shrink": 8.0
+    },
+    {
+      "method": "additive",
+      "shrink": 0.0
+    },
+    {
+      "method": "additive",
+      "shrink": 2.0
+    },
+    {
+      "method": "additive",
+      "shrink": 8.0
+    },
+    {
+      "method": "input_remaining",
+      "shrink": 0.0
+    },
+    {
+      "method": "input_remaining",
+      "shrink": 2.0
+    },
+    {
+      "method": "input_remaining",
+      "shrink": 8.0
+    }
+  ],
+  "cv_folds": 4,
+  "selection": "lexicographic (group-macro total MAE, group-macro first MAE, simpler pair)",
+  "projection": "first=max(1,first); total=max(first,1,total)",
+  "estimator_target": "robust L1 point estimate, not a calibrated conditional expectation",
+  "input_remaining_definition": "max(0, observed_cost - estimated_prompt_input_cost)",
+  "domain_shrinkage": "blend domain/global weighted medians by effective source-group count and fixed shrink strength",
+  "calibration_or_test_labels_used": false
+}

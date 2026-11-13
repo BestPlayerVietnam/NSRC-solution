@@ -1,0 +1,137 @@
+--- a/run_agent.py
++++ b/run_agent.py
+@@ -52,6 +52,42 @@
+     except OSError:
+         pass
+ 
++
++
++def record_task_error(trace_file: Path, task_dir: Path, task: dict,
++                      phase: str, exc: Exception) -> None:
++    """A local tool failure affects this task; it is not an impossibility proof."""
++    record_trace(trace_file, {"task_id": task_dir.name, "kind": task.get("task_type"),
++                              "outcome": "task_error", "phase": phase,
++                              "error_type": type(exc).__name__})
++    print(f"failed {task_dir.name} during {phase}: {type(exc).__name__}",
++          file=sys.stderr, flush=True)
++
++
++def prepare_task_features(entries: list, trace_file: Path) -> tuple[list, dict]:
++    prepared, features = [], {}
++    for task_dir, workspace, task in entries:
++        try:
++            value = extract_features(task, workspace)
++        except Exception as exc:
++            record_task_error(trace_file, task_dir, task, "feature_extraction", exc)
++            continue
++        features[str(task_dir)] = value
++        prepared.append((task_dir, workspace, task))
++    return prepared, features
++
++
++def prepare_task_plans(entries: list, estimate, trace_file: Path) -> tuple[list, list]:
++    prepared, plans = [], []
++    for task_dir, workspace, task in entries:
++        try:
++            plan = estimate(task_dir, workspace, task)
++        except Exception as exc:
++            record_task_error(trace_file, task_dir, task, "planning", exc)
++            continue
++        plans.append((plan, len(prepared)))
++        prepared.append((task_dir, workspace, task))
++    return prepared, plans
+ 
+ def math_answer(instruction: str) -> str | None:
+     """Exact integer interpreter for warehouse arithmetic in the sample family."""
+@@ -459,33 +495,41 @@
+     remaining = []
+     for task_dir, workspace, task in sorted(entries, key=lambda e: -float(e[2].get("reward", 0))):
+         if time.monotonic()-start>3250:break
+-        answer = deterministic_answer(task, workspace)
+-        if answer is not None:
+-            atomic_answer(task_dir, workspace, answer)
+-            record_trace(args.trace_file, {"task_id": task_dir.name, "kind": task.get("task_type"),
+-                                           "outcome": "solved_local", "predicted_tokens": 0, "actual_tokens": 0})
+-            print(f"solved {task_dir.name} locally", flush=True)
+-        else:
+-            reason = impossible_reason(task, workspace) if args.retry_policy=='adaptive' else None
+-            if reason:
++        try:
++            answer = deterministic_answer(task, workspace)
++            if answer is not None:
++                atomic_answer(task_dir, workspace, answer)
+                 record_trace(args.trace_file, {"task_id": task_dir.name, "kind": task.get("task_type"),
+-                                               "outcome": "impossible", "reason": reason,
+-                                               "predicted_tokens": 0, "actual_tokens": 0})
+-                print(f"skipped {task_dir.name}: {reason}", flush=True)
++                                               "outcome": "solved_local", "predicted_tokens": 0, "actual_tokens": 0})
++                print(f"solved {task_dir.name} locally", flush=True)
+             else:
+-                remaining.append((task_dir, workspace, task))
++                reason = impossible_reason(task, workspace) if args.retry_policy=='adaptive' else None
++                if reason:
++                    record_trace(args.trace_file, {"task_id": task_dir.name, "kind": task.get("task_type"),
++                                                   "outcome": "impossible", "reason": reason,
++                                                   "predicted_tokens": 0, "actual_tokens": 0})
++                    print(f"skipped {task_dir.name}: {reason}", flush=True)
++                else:
++                    remaining.append((task_dir, workspace, task))
++        except Exception as exc:
++            record_task_error(args.trace_file, task_dir, task, "local_scan", exc)
++            remaining.append((task_dir, workspace, task))
+ 
+     # Known sample-family repairs are attempted before constructing an LLM
+     # client. This lets the complete supplied sample set run offline.
+     still_remaining = []
+     for task_dir, workspace, task in remaining:
+         if time.monotonic()-start>3250:break
+-        if task.get("task_type") == "coding" and (run_tests(workspace)[0] or try_known_repairs(workspace)):
+-            atomic_answer(task_dir, workspace, "DONE")
+-            record_trace(args.trace_file, {"task_id": task_dir.name, "kind": "coding",
+-                                           "outcome": "solved_local", "predicted_tokens": 0, "actual_tokens": 0})
+-            print(f"solved {task_dir.name} locally", flush=True)
+-        else:
++        try:
++            if task.get("task_type") == "coding" and (run_tests(workspace)[0] or try_known_repairs(workspace)):
++                atomic_answer(task_dir, workspace, "DONE")
++                record_trace(args.trace_file, {"task_id": task_dir.name, "kind": "coding",
++                                               "outcome": "solved_local", "predicted_tokens": 0, "actual_tokens": 0})
++                print(f"solved {task_dir.name} locally", flush=True)
++            else:
++                still_remaining.append((task_dir, workspace, task))
++        except Exception as exc:
++            record_task_error(args.trace_file, task_dir, task, "local_coding_check", exc)
+             still_remaining.append((task_dir, workspace, task))
+     remaining = still_remaining
+     if args.offline or not remaining:
+@@ -503,7 +547,7 @@
+     if args.cost_artifact.is_file() and args.fixed_model and args.retry_policy=='adaptive':
+         from cost_model import load_cost_model
+         cost_model=load_cost_model(args.cost_artifact,expected_policy_id=POLICY_ID)
+-    feature_cache={str(task_dir):extract_features(task,workspace) for task_dir,workspace,task in remaining}
++    remaining, feature_cache = prepare_task_features(remaining, args.trace_file)
+     prediction_details={}
+     def estimate(task_dir,workspace,task):
+         plan=estimator.estimate(task,workspace)
+@@ -524,8 +568,7 @@
+                        raw_predicted_tokens=max(1,total),policy_id=runtime_policy)
+ 
+     while remaining and time.monotonic() - start <= 3300:
+-        plans = [(estimate(task_dir, workspace, task), index)
+-                 for index, (task_dir, workspace, task) in enumerate(remaining)]
++        remaining, plans = prepare_task_plans(remaining, estimate, args.trace_file)
+         affordable = [(plan, index) for plan, index in plans
+                       if plan.priority > 0 and plan.predicted_tokens * 1.25 < llm.remaining]
+         if not affordable:
+@@ -548,8 +591,9 @@
+             alternatives.append((prior_cost,p.reward*p.success_probability/max(1,prior_cost)))
+         llm.opportunity=max((value for cost,value in alternatives),default=0)
+         llm.competing_cost=sum(cost for cost,value in alternatives)
+-        heuristic=TaskEstimator().estimate(task,workspace).predicted_tokens
+-        try:
++        heuristic = None
++        try:
++            heuristic=TaskEstimator().estimate(task,workspace).predicted_tokens
+             if task.get("task_type") == "coding":
+                 reasoning = llm.remaining > 1000
+                 answer = "DONE" if await solve_coding(llm, task, workspace, reasoning) else None

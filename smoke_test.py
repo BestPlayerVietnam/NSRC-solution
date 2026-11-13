@@ -12,6 +12,7 @@ from pathlib import Path
 SAMPLES = Path(__file__).parent / "TASK" / "task-dir"
 parser = argparse.ArgumentParser()
 parser.add_argument("--docker", action="store_true")
+parser.add_argument("--image", default="nsrc-harness:latest")
 args = parser.parse_args()
 with tempfile.TemporaryDirectory(prefix="nsrc-sample-") as tmp:
     destination = Path(tmp).resolve() / "tasks"
@@ -21,7 +22,7 @@ with tempfile.TemporaryDirectory(prefix="nsrc-sample-") as tmp:
             "docker", "run", "--rm", "--network", "none", "--read-only",
             "--tmpfs", "/tmp:rw,size=2g", "--mount",
             f"type=bind,source={destination},target=/data/tasks",
-            "nsrc-harness:latest", "python", "/app/run_agent.py",
+            args.image, "python", "/app/run_agent.py",
             "--tasks-dir", "/data/tasks", "--offline",
         ]
     else:

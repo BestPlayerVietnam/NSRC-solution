@@ -1,0 +1,29 @@
+name: nsrc-solution
+
+services:
+  agent:
+    build:
+      context: .
+    image: nsrc-solution:release
+    environment:
+      LLM_BASE_URL: ${LLM_BASE_URL:?Set LLM_BASE_URL in .env or the environment}
+      LLM_API_KEY: ${LLM_API_KEY:?Set LLM_API_KEY in .env or the environment}
+      BUDGET: ${BUDGET-100000}
+      HOME: /tmp
+      TRACE_FILE: /data/tasks/nsrc-trajectory.jsonl
+    volumes:
+      - type: bind
+        source: ${TASKS_DIR:-./tasks}
+        target: /data/tasks
+        bind:
+          create_host_path: false
+    read_only: true
+    tmpfs:
+      - /tmp:rw,size=2g
+    cpus: 4
+    mem_limit: 16g
+    pids_limit: 512
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true

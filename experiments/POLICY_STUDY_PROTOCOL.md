@@ -1,0 +1,31 @@
+# CPU policy study: amended before paid calls, 12 November 2026
+
+The user clarified that there is no global development-token ceiling. Each distinct single-model pipeline has its OWN shared 100,000-weighted-token budget; there is no per-task quota. Historic ledgers are immutable records. This replaces the earlier cumulative-per-model development restriction. A partial pipeline must never be reset or presented as a fresh run. All four Qwen model variants participate.
+
+144 new authored synthetic tasks: 64 training, 32 calibration, 48 test. The 36 structural families are disjoint across splits; 25% negative cases have explicit contradictory contracts or missing essential facts demonstrated by alternative worlds. All 144 oracles were checked offline in Docker before calls. Gold/reference/hidden checks stay outside solver mounts. This is controlled structural generalization, not the representative hidden contest distribution.
+
+Training and calibration each run four independent adaptive-policy pipelines, one per model. Test compares classic/adaptive x four models, each with a separate 100k ledger. Fixed-model mode is enforced BOTH in the runtime and host relay. The classic ablation uses the same tools, but disables new formal prefiltering and uses a fixed two-attempt policy; it is not a claim to reproduce an unchanged historical image. Training used two concurrent pipelines. Calibration and test were configured for four before their paid calls, within the regulation's five-session limit. Each uses an actual openJiuwen Model client and has CPU8/RAM16GB container limits.
+
+Fit cost predictors on train and select method/regularization with grouped train CV (MAE criterion). Calibration sets empirical residual upper estimates only. Freeze artifact, host/image artifact equality, image IDs, input hashes and all test forecasts before test calls. Each model has separate first-call and total-policy heads. Reward and oracle answerability are not prediction features.
+
+After collection and before test freeze, a training-only extreme-feature audit found finite but enormous extrapolated predictions and zero estimates. Deployment now falls back to the prompt-aware prior on model warnings, invalid/nonpositive heads, inconsistent heads or a predicted total above the whole pipeline budget. This is a forecast trust decision, not a task execution cap. Raw learned and deployed forecasts are frozen and scored separately. The LLM/repair policy is unchanged; collector sources and original image remain preserved. The guarded fitted image is a separate Docker tag.
+
+Primary forecast metrics: MAE/WAPE of initial total-policy forecasts on completed new-policy tasks with actual API attempts and reconciled usage. First-call errors are separate. Compare learned predictor, original heuristic and prompt-aware prior on IDENTICAL new-policy trajectories. Online updates are a secondary metric. Local zero-cost solutions/proofs, censored prefixes and unknown-usage holds are reported separately. Completion of HTTP usage is not completion of the task policy: interrupted prefixes may train the first-call head, never the full-policy cost head.
+
+Primary execution objective is lexicographic: maximize verified reward, then minimize cost only when reward ties. Report solved tasks, false hard skips, cost on negatives and continuations, and incomplete pipelines. Smaller-budget stress diagnostics are explicitly secondary. No tuning on test outcomes followed by calling the same set independent validation.
+
+Every physical API attempt is reserved before forwarding. Independent Relay instances have independent ceilings and ledgers; event writes are serialized. Unknown task attribution is rejected before reservation. Reports reconcile all costs with per-pipeline ledger snapshots. Unknown/error reserves remain charged. A cap controls one generation and may grow after truncation; it does not assign a total task allowance.
+
+A second panel of 100 tasks was prepared from unused GSM8K, HumanEval, SQuAD2 and WikiSQL source groups plus proven negative variants: 25 tasks per domain, 20% negatives. Its labels do not enter fitting or policy search. Search primary grading is official SQuAD normalized exact match over every accepted answer span; case-sensitive scores remain secondary.
+
+Before the first public-panel API call, its concurrency was amended to two pipelines, with a family lock serializing reasoning/plain variants sharing a provider model family. This follows HTTP429 responses in the earlier synthetic phase; it does not change that phase or erase its conservative charges. Before-amendment protocol/wrapper copies are retained beside the final public protocol. Model weights, tasks, image and frozen forecasts were unchanged. Different provider families may run concurrently.
+
+A later residual-predictor experiment fits only the original 64-task training split, includes the prompt prior as a CV candidate and scores final nonnegative, ordered outputs. Its synthetic evaluation is development evidence because those synthetic results inspired it. Public forecasts were frozen before reading public outcomes, but after public collection began. They are an offline comparison on the original v3 trajectories, not an end-to-end residual-policy trial. Changing the deployed estimator or hardening the runtime after this test does not retroactively change the measured image or its results.
+
+Primary-source ideas:
+- https://arxiv.org/html/2611.06372v1 — allocation depends on informative solvability priors; difficulty alone does not justify more attempts.
+- https://arxiv.org/html/2608.07968v1 — shared-budget allocation differs from independent per-question caps.
+- https://research.google/pubs/cost-effective-agent-test-time-scaling-2/ — assess complete costs and verified agent outcomes.
+- https://machinelearning.apple.com/research/conformal-thinking-risk-control — early stopping trades cost against false rejection; our small calibration sample establishes no formal risk guarantee.
+
+EBLO is reviewed as a source of ideas. Its mock-generated full answers, hand-scaled p90 and reward-minus-cost fitness are not adopted as measured evidence or the official objective. New scheduler searches use verified real trajectories and preserve independent heldout groups.

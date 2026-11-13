@@ -1,0 +1,1279 @@
+{
+  "schema_version": 1,
+  "version": "sla-v1",
+  "image": "sha256:641d29e9e19febbb83327acaf1dcadd470e27f0e37d545f90ec5770e6027a1bd",
+  "promotion_status": "Not a universal improvement: short large_plain regressed20 to6 points; retained as development evidence.",
+  "provenance": {
+    "protocol_sha256": "5c24eba5c10296c6d90fc050f2f8655187efe44db1342cfd366e0618d2298851",
+    "evaluation_sha256": "021a3243331787ae3206a017ff973afd858e74e1d5be1d28d48f9bc2faea54d4",
+    "calls_sha256": "c4e8ac01ffb0d215ae2572064ab9dd0a27d8c19a881fc219332d0396095d9af0",
+    "run": "experiments/runs/2026-11-13-sla-release",
+    "suite": "experiments/suite_sla_release",
+    "manifest_sha256": "5c3658c725c29f71f92bbc7ab3735911df450d6e78545ddb2afc9682e360ce1d",
+    "oracle_sha256": "db0227e5c681deee2bc1bee98b4e397b391572b6000a9e73d4d802b64cfe583d",
+    "cold_report_sha256": "120d6416e6eeae2ace743e7b21cf034bd28884fe4e918c5ef364df301cb770f5",
+    "source_sha256": {
+      "experiments/build_public_panel.py": "77489db9ebeeaa00c07a0f34f95439044bc2d324e0abf565ca735c2a2c7c938e",
+      "experiments/confidence_probe.py": "f530de0ddc480472c1bab14a50e5df7f6c82b59a80f53437b1eb73805592c729",
+      "experiments/final_release_validation.py": "c3338bc43a466d042217f9830a1669a8d822656805573bd483701fd41df38eeb",
+      "experiments/policy_experiment.py": "978f12c45fb0e94ec4048a8794eb6724160ed5aee7ec8b39444009cfa939a3d2",
+      "experiments/public_experiment.py": "d9da30d422d3f536474b6b6b2697f09773dce4cd88a65deed30f6846857eec45",
+      "experiments/run_experiments.py": "cadaff6384423ef2786ed07e755864a9e268b1b0c3d197786a8af40e5869819e",
+      "experiments/SLA_LATENCY_PRIORS_2026-11-13.json": "1183bb42859cd20c7609f7dd88a1cf6d02a5b91df943505e1ac2f1e97df6b3c4",
+      "experiments/sla_release_validation.py": "76b8d5f2ea2a0a85cadbf48bda02df930eb4a59e89c0bf99d10a33a5101b8840"
+    },
+    "runtime_sha256": {
+      "requirements-runtime.txt": "9283efb13feb6e5ae576e1ebb78555a9ec0d30fa42a4eba2a77344b734853f53",
+      "run_agent.py": "8e2d1957589bd525f0fa3ae066dee3613676ff597d61bcdd21325e7f9bde3122",
+      "planner.py": "2470794929b7225c0881d99bb2837d599ccb8135b76dacb03f269942b46200ba",
+      "budget_runtime.py": "58dea1e80a75aa2fb68c52e33f3913491991516135373aa70564104ed5e130b2",
+      "analytical_tools.py": "9752b2788624baefebc61d17b52557c771b58377e210c06d21e2e78eba01c89b",
+      "coding_tools.py": "d6c7c96b6fb401d8a0d8c5c3b4f2e670e151f991cab0b1794e33bb47c3bb5af4",
+      "context_tools.py": "21b9f49e2777c568e928d6bb9f21f5e67db5937d1968343cff96ad4e3a9fc03b",
+      "feasibility.py": "f0795114e42df8c88fd38e73eb3bfe01f1edb72f47b7a127e0c32e9769c16a88",
+      "finite_constraints.py": "94b0b3025dd1a0c0081bb1711995bb263f185c62642ff96a17d4b5e6ccb55d67",
+      "result_constraints.py": "4e9578902f836591475e94ec9c94405480c02a717a071d5546e617b8514cd59f",
+      "policy_features.py": "b91f9ccac0b8d0afae8a2a5d115b92b5ace473905a0064522658940749a41376",
+      "retry_policy.py": "e18014503aa2c125cd5943eeb240b9ae78b1c4df2b85841e5983bb71b5990b95",
+      "confidence_policy.py": "a8f26bfd8e76fe2bb15d38807caddecc31223e7988d1370d5dafacb646656dfa",
+      "task_confidence.py": "0943bf5e7e31c083e2b87b6f7968b79bd736f86a0628ce07a1d122b71866100a",
+      "experience_memory.py": "85e20c739bac58dcdbc9668faa9aee7016093a4c4bcd89d5bf66dbb19e09742b",
+      "latency_planner.py": "ccdd736c4fed4822d659673000ed62db91f5aef145716b203d166fbba62a6d5c",
+      "cost_model.py": "89a3b92f1694f8cff1f9d33c98d2f2dfd374234994c6b9c6297aa194c475fb5b",
+      "forecast_guard.py": "84b908561d981c13d55778382413ac357b6863235a41aea592b92e30ac8cc943",
+      "residual_predictor.py": "8f9587a4f905d0628a481e8d1711fc0100f78fbb8a80aa11d0255e9c4c8aab97",
+      "cost_artifact.json": "b0f787dcd78ed543a9ce257c425e13831634a276d92f452803361aa3790e6363",
+      "residual_cost_artifact.json": "b946d13031193c59912fd19f47cc6a6d841b66bd83ccfc08d93eb350f74351c0"
+    },
+    "runtime_audit_scope": "Matches archived cold-build source hashes; live run_agent.py has subsequently been changed for v2."
+  },
+  "panel": {
+    "tasks_per_arm": 16,
+    "positive": 12,
+    "negative": 4,
+    "maximum_reward": 30,
+    "primary_seconds": 3300,
+    "short_seconds": 90,
+    "arms": 16,
+    "token_budget_per_arm": 100000,
+    "same_image": true,
+    "cpus_per_arm": 4,
+    "max_parallel": 2,
+    "provider_families_serialized": true
+  },
+  "arms": {
+    "full_off_small_plain": {
+      "model": "qwen3.6-35b-a3b-noreason",
+      "sla_policy": "off",
+      "phase": "full",
+      "time_limit_seconds": 3300,
+      "scheduled": 16,
+      "visited": 16,
+      "unattempted": 0,
+      "provider_attempted_tasks": 16,
+      "raw_graded_reward": 21,
+      "on_time_reward": 21,
+      "maximum_reward": 30,
+      "on_time_solved": 9,
+      "raw_solved": 9,
+      "negative_answered": 0,
+      "positive_wrong_answer": 3,
+      "late_answers": 0,
+      "unknown_answer_timestamps": 0,
+      "cost": 4782.1,
+      "calls": 19,
+      "usage_unknown_calls": 0,
+      "local_nonreconciled_calls": 0,
+      "pending_calls": 0,
+      "provider_responses_after_container_exit": 0,
+      "container_seconds": 93.25,
+      "relay_drain_seconds": 0.375,
+      "total_observed_seconds": 93.79699999999866,
+      "on_time_reward_per_container_second": 0.225201072386059,
+      "watchdog_triggered": false,
+      "returncode": 0,
+      "time_forecast": {
+        "same_complete_cohort_count": 16,
+        "point_mae": 3.0063165353071266,
+        "empirical_upper_coverage": 1.0,
+        "coverage_guarantee": false
+      },
+      "activation": {
+        "selected_queue_time_pressure": 0,
+        "selected_queue_joint_scarce_time_value": 0,
+        "sla_reason_counts": {},
+        "continuation_reason_counts": {},
+        "generation_cap_reductions": 0,
+        "minimum_generation_denials": 0,
+        "retry_sla_reason_counts": {}
+      },
+      "emission": {
+        "maximum_answer_elapsed_seconds": 89.7179090339996,
+        "maximum_on_time_answer_elapsed_seconds": 89.7179090339996
+      },
+      "accounting": {
+        "local_timeout_holds": 0,
+        "local_held_reservation_tokens": 0.0,
+        "actual_provider_cost_for_held_calls": 0.0,
+        "runtime_conservative_charge": 4782.1,
+        "matched_physical_calls": 19
+      }
+    },
+    "full_adaptive_large_plain": {
+      "model": "qwen3.8-27b-noreason",
+      "sla_policy": "adaptive",
+      "phase": "full",
+      "time_limit_seconds": 3300,
+      "scheduled": 16,
+      "visited": 16,
+      "unattempted": 0,
+      "provider_attempted_tasks": 16,
+      "raw_graded_reward": 21,
+      "on_time_reward": 21,
+      "maximum_reward": 30,
+      "on_time_solved": 9,
+      "raw_solved": 9,
+      "negative_answered": 0,
+      "positive_wrong_answer": 2,
+      "late_answers": 0,
+      "unknown_answer_timestamps": 0,
+      "cost": 3130.8,
+      "calls": 20,
+      "usage_unknown_calls": 0,
+      "local_nonreconciled_calls": 0,
+      "pending_calls": 0,
+      "provider_responses_after_container_exit": 0,
+      "container_seconds": 109.625,
+      "relay_drain_seconds": 0.14099999999598367,
+      "total_observed_seconds": 109.98500000000058,
+      "on_time_reward_per_container_second": 0.19156214367160776,
+      "watchdog_triggered": false,
+      "returncode": 0,
+      "time_forecast": {
+        "same_complete_cohort_count": 16,
+        "point_mae": 2.491771140970522,
+        "empirical_upper_coverage": 1.0,
+        "coverage_guarantee": false
+      },
+      "activation": {
+        "selected_queue_time_pressure": 0,
+        "selected_queue_joint_scarce_time_value": 0,
+        "sla_reason_counts": {
+          "continuation_value_sufficient": 4
+        },
+        "continuation_reason_counts": {
+          "continuation_value_sufficient": 4
+        },
+        "generation_cap_reductions": 0,
+        "minimum_generation_denials": 0,
+        "retry_sla_reason_counts": {}
+      },
+      "emission": {
+        "maximum_answer_elapsed_seconds": 105.33818672000052,
+        "maximum_on_time_answer_elapsed_seconds": 105.33818672000052
+      },
+      "accounting": {
+        "local_timeout_holds": 0,
+        "local_held_reservation_tokens": 0.0,
+        "actual_provider_cost_for_held_calls": 0.0,
+        "runtime_conservative_charge": 3130.8,
+        "matched_physical_calls": 20
+      }
+    },
+    "full_off_small_reason": {
+      "model": "qwen3.6-35b-a3b",
+      "sla_policy": "off",
+      "phase": "full",
+      "time_limit_seconds": 3300,
+      "scheduled": 16,
+      "visited": 16,
+      "unattempted": 0,
+      "provider_attempted_tasks": 16,
+      "raw_graded_reward": 17,
+      "on_time_reward": 17,
+      "maximum_reward": 30,
+      "on_time_solved": 8,
+      "raw_solved": 8,
+      "negative_answered": 0,
+      "positive_wrong_answer": 4,
+      "late_answers": 0,
+      "unknown_answer_timestamps": 0,
+      "cost": 12425.6,
+      "calls": 19,
+      "usage_unknown_calls": 0,
+      "local_nonreconciled_calls": 0,
+      "pending_calls": 0,
+      "provider_responses_after_container_exit": 0,
+      "container_seconds": 165.38999999999942,
+      "relay_drain_seconds": 0.0940000000045984,
+      "total_observed_seconds": 165.67199999999866,
+      "on_time_reward_per_container_second": 0.10278735110949912,
+      "watchdog_triggered": false,
+      "returncode": 0,
+      "time_forecast": {
+        "same_complete_cohort_count": 16,
+        "point_mae": 2.401444114414,
+        "empirical_upper_coverage": 0.9375,
+        "coverage_guarantee": false
+      },
+      "activation": {
+        "selected_queue_time_pressure": 0,
+        "selected_queue_joint_scarce_time_value": 0,
+        "sla_reason_counts": {},
+        "continuation_reason_counts": {},
+        "generation_cap_reductions": 0,
+        "minimum_generation_denials": 0,
+        "retry_sla_reason_counts": {}
+      },
+      "emission": {
+        "maximum_answer_elapsed_seconds": 160.56637325500014,
+        "maximum_on_time_answer_elapsed_seconds": 160.56637325500014
+      },
+      "accounting": {
+        "local_timeout_holds": 0,
+        "local_held_reservation_tokens": 0.0,
+        "actual_provider_cost_for_held_calls": 0.0,
+        "runtime_conservative_charge": 12425.6,
+        "matched_physical_calls": 19
+      }
+    },
+    "full_adaptive_large_reason": {
+      "model": "qwen3.8-27b",
+      "sla_policy": "adaptive",
+      "phase": "full",
+      "time_limit_seconds": 3300,
+      "scheduled": 16,
+      "visited": 16,
+      "unattempted": 0,
+      "provider_attempted_tasks": 16,
+      "raw_graded_reward": 25,
+      "on_time_reward": 25,
+      "maximum_reward": 30,
+      "on_time_solved": 10,
+      "raw_solved": 10,
+      "negative_answered": 0,
+      "positive_wrong_answer": 2,
+      "late_answers": 0,
+      "unknown_answer_timestamps": 0,
+      "cost": 9288.6,
+      "calls": 18,
+      "usage_unknown_calls": 0,
+      "local_nonreconciled_calls": 0,
+      "pending_calls": 0,
+      "provider_responses_after_container_exit": 0,
+      "container_seconds": 165.84399999999732,
+      "relay_drain_seconds": 0.4539999999979045,
+      "total_observed_seconds": 166.48500000000058,
+      "on_time_reward_per_container_second": 0.15074407274306217,
+      "watchdog_triggered": false,
+      "returncode": 0,
+      "time_forecast": {
+        "same_complete_cohort_count": 16,
+        "point_mae": 8.424883202125873,
+        "empirical_upper_coverage": 0.9375,
+        "coverage_guarantee": false
+      },
+      "activation": {
+        "selected_queue_time_pressure": 0,
+        "selected_queue_joint_scarce_time_value": 0,
+        "sla_reason_counts": {
+          "continuation_value_sufficient": 2
+        },
+        "continuation_reason_counts": {
+          "continuation_value_sufficient": 2
+        },
+        "generation_cap_reductions": 0,
+        "minimum_generation_denials": 0,
+        "retry_sla_reason_counts": {}
+      },
+      "emission": {
+        "maximum_answer_elapsed_seconds": 160.20041371600018,
+        "maximum_on_time_answer_elapsed_seconds": 160.20041371600018
+      },
+      "accounting": {
+        "local_timeout_holds": 0,
+        "local_held_reservation_tokens": 0.0,
+        "actual_provider_cost_for_held_calls": 0.0,
+        "runtime_conservative_charge": 9288.6,
+        "matched_physical_calls": 18
+      }
+    },
+    "full_adaptive_small_plain": {
+      "model": "qwen3.6-35b-a3b-noreason",
+      "sla_policy": "adaptive",
+      "phase": "full",
+      "time_limit_seconds": 3300,
+      "scheduled": 16,
+      "visited": 16,
+      "unattempted": 0,
+      "provider_attempted_tasks": 16,
+      "raw_graded_reward": 19,
+      "on_time_reward": 19,
+      "maximum_reward": 30,
+      "on_time_solved": 8,
+      "raw_solved": 8,
+      "negative_answered": 0,
+      "positive_wrong_answer": 4,
+      "late_answers": 0,
+      "unknown_answer_timestamps": 0,
+      "cost": 3782.1,
+      "calls": 19,
+      "usage_unknown_calls": 0,
+      "local_nonreconciled_calls": 0,
+      "pending_calls": 0,
+      "provider_responses_after_container_exit": 0,
+      "container_seconds": 114.0,
+      "relay_drain_seconds": 0.01600000000325963,
+      "total_observed_seconds": 114.23500000000058,
+      "on_time_reward_per_container_second": 0.16666666666666666,
+      "watchdog_triggered": false,
+      "returncode": 0,
+      "time_forecast": {
+        "same_complete_cohort_count": 16,
+        "point_mae": 3.7653777358671983,
+        "empirical_upper_coverage": 0.9375,
+        "coverage_guarantee": false
+      },
+      "activation": {
+        "selected_queue_time_pressure": 0,
+        "selected_queue_joint_scarce_time_value": 0,
+        "sla_reason_counts": {
+          "continuation_value_sufficient": 3
+        },
+        "continuation_reason_counts": {
+          "continuation_value_sufficient": 3
+        },
+        "generation_cap_reductions": 0,
+        "minimum_generation_denials": 0,
+        "retry_sla_reason_counts": {}
+      },
+      "emission": {
+        "maximum_answer_elapsed_seconds": 109.53936781899938,
+        "maximum_on_time_answer_elapsed_seconds": 109.53936781899938
+      },
+      "accounting": {
+        "local_timeout_holds": 0,
+        "local_held_reservation_tokens": 0.0,
+        "actual_provider_cost_for_held_calls": 0.0,
+        "runtime_conservative_charge": 3782.1,
+        "matched_physical_calls": 19
+      }
+    },
+    "full_off_large_plain": {
+      "model": "qwen3.8-27b-noreason",
+      "sla_policy": "off",
+      "phase": "full",
+      "time_limit_seconds": 3300,
+      "scheduled": 16,
+      "visited": 16,
+      "unattempted": 0,
+      "provider_attempted_tasks": 16,
+      "raw_graded_reward": 21,
+      "on_time_reward": 21,
+      "maximum_reward": 30,
+      "on_time_solved": 9,
+      "raw_solved": 9,
+      "negative_answered": 0,
+      "positive_wrong_answer": 2,
+      "late_answers": 0,
+      "unknown_answer_timestamps": 0,
+      "cost": 2905.4,
+      "calls": 18,
+      "usage_unknown_calls": 0,
+      "local_nonreconciled_calls": 0,
+      "pending_calls": 0,
+      "provider_responses_after_container_exit": 0,
+      "container_seconds": 101.40600000000268,
+      "relay_drain_seconds": 0.39099999999598367,
+      "total_observed_seconds": 101.98399999999674,
+      "on_time_reward_per_container_second": 0.2070883379681621,
+      "watchdog_triggered": false,
+      "returncode": 0,
+      "time_forecast": {
+        "same_complete_cohort_count": 16,
+        "point_mae": 2.1613909898679378,
+        "empirical_upper_coverage": 0.9375,
+        "coverage_guarantee": false
+      },
+      "activation": {
+        "selected_queue_time_pressure": 0,
+        "selected_queue_joint_scarce_time_value": 0,
+        "sla_reason_counts": {},
+        "continuation_reason_counts": {},
+        "generation_cap_reductions": 0,
+        "minimum_generation_denials": 0,
+        "retry_sla_reason_counts": {}
+      },
+      "emission": {
+        "maximum_answer_elapsed_seconds": 97.12693630099966,
+        "maximum_on_time_answer_elapsed_seconds": 97.12693630099966
+      },
+      "accounting": {
+        "local_timeout_holds": 0,
+        "local_held_reservation_tokens": 0.0,
+        "actual_provider_cost_for_held_calls": 0.0,
+        "runtime_conservative_charge": 2905.4,
+        "matched_physical_calls": 18
+      }
+    },
+    "full_adaptive_small_reason": {
+      "model": "qwen3.6-35b-a3b",
+      "sla_policy": "adaptive",
+      "phase": "full",
+      "time_limit_seconds": 3300,
+      "scheduled": 16,
+      "visited": 16,
+      "unattempted": 0,
+      "provider_attempted_tasks": 16,
+      "raw_graded_reward": 15,
+      "on_time_reward": 15,
+      "maximum_reward": 30,
+      "on_time_solved": 7,
+      "raw_solved": 7,
+      "negative_answered": 1,
+      "positive_wrong_answer": 5,
+      "late_answers": 0,
+      "unknown_answer_timestamps": 0,
+      "cost": 13398.7,
+      "calls": 19,
+      "usage_unknown_calls": 0,
+      "local_nonreconciled_calls": 0,
+      "pending_calls": 0,
+      "provider_responses_after_container_exit": 0,
+      "container_seconds": 191.375,
+      "relay_drain_seconds": 0.2190000000045984,
+      "total_observed_seconds": 191.78199999999924,
+      "on_time_reward_per_container_second": 0.07838014369693011,
+      "watchdog_triggered": false,
+      "returncode": 0,
+      "time_forecast": {
+        "same_complete_cohort_count": 16,
+        "point_mae": 2.3197167692371936,
+        "empirical_upper_coverage": 0.9375,
+        "coverage_guarantee": false
+      },
+      "activation": {
+        "selected_queue_time_pressure": 0,
+        "selected_queue_joint_scarce_time_value": 0,
+        "sla_reason_counts": {
+          "continuation_value_sufficient": 3
+        },
+        "continuation_reason_counts": {
+          "continuation_value_sufficient": 3
+        },
+        "generation_cap_reductions": 0,
+        "minimum_generation_denials": 0,
+        "retry_sla_reason_counts": {}
+      },
+      "emission": {
+        "maximum_answer_elapsed_seconds": 185.55090409500008,
+        "maximum_on_time_answer_elapsed_seconds": 185.55090409500008
+      },
+      "accounting": {
+        "local_timeout_holds": 0,
+        "local_held_reservation_tokens": 0.0,
+        "actual_provider_cost_for_held_calls": 0.0,
+        "runtime_conservative_charge": 13398.7,
+        "matched_physical_calls": 19
+      }
+    },
+    "full_off_large_reason": {
+      "model": "qwen3.8-27b",
+      "sla_policy": "off",
+      "phase": "full",
+      "time_limit_seconds": 3300,
+      "scheduled": 16,
+      "visited": 16,
+      "unattempted": 0,
+      "provider_attempted_tasks": 16,
+      "raw_graded_reward": 25,
+      "on_time_reward": 25,
+      "maximum_reward": 30,
+      "on_time_solved": 10,
+      "raw_solved": 10,
+      "negative_answered": 0,
+      "positive_wrong_answer": 2,
+      "late_answers": 0,
+      "unknown_answer_timestamps": 0,
+      "cost": 7793.9,
+      "calls": 18,
+      "usage_unknown_calls": 0,
+      "local_nonreconciled_calls": 0,
+      "pending_calls": 0,
+      "provider_responses_after_container_exit": 0,
+      "container_seconds": 142.82800000000134,
+      "relay_drain_seconds": 0.39099999999598367,
+      "total_observed_seconds": 143.39099999999598,
+      "on_time_reward_per_container_second": 0.17503570728428436,
+      "watchdog_triggered": false,
+      "returncode": 0,
+      "time_forecast": {
+        "same_complete_cohort_count": 16,
+        "point_mae": 6.131916363628801,
+        "empirical_upper_coverage": 0.875,
+        "coverage_guarantee": false
+      },
+      "activation": {
+        "selected_queue_time_pressure": 0,
+        "selected_queue_joint_scarce_time_value": 0,
+        "sla_reason_counts": {},
+        "continuation_reason_counts": {},
+        "generation_cap_reductions": 0,
+        "minimum_generation_denials": 0,
+        "retry_sla_reason_counts": {}
+      },
+      "emission": {
+        "maximum_answer_elapsed_seconds": 137.8035457699989,
+        "maximum_on_time_answer_elapsed_seconds": 137.8035457699989
+      },
+      "accounting": {
+        "local_timeout_holds": 0,
+        "local_held_reservation_tokens": 0.0,
+        "actual_provider_cost_for_held_calls": 0.0,
+        "runtime_conservative_charge": 7793.9,
+        "matched_physical_calls": 18
+      }
+    },
+    "short_off_small_plain": {
+      "model": "qwen3.6-35b-a3b-noreason",
+      "sla_policy": "off",
+      "phase": "short",
+      "time_limit_seconds": 90,
+      "scheduled": 16,
+      "visited": 8,
+      "unattempted": 8,
+      "provider_attempted_tasks": 8,
+      "raw_graded_reward": 8,
+      "on_time_reward": 8,
+      "maximum_reward": 30,
+      "on_time_solved": 2,
+      "raw_solved": 2,
+      "negative_answered": 0,
+      "positive_wrong_answer": 3,
+      "late_answers": 0,
+      "unknown_answer_timestamps": 0,
+      "cost": 1661.6,
+      "calls": 9,
+      "usage_unknown_calls": 0,
+      "local_nonreconciled_calls": 1,
+      "pending_calls": 0,
+      "provider_responses_after_container_exit": 1,
+      "container_seconds": 95.0,
+      "relay_drain_seconds": 13.43699999999808,
+      "total_observed_seconds": 108.65600000000268,
+      "on_time_reward_per_container_second": 0.08421052631578947,
+      "watchdog_triggered": false,
+      "returncode": 0,
+      "time_forecast": {
+        "same_complete_cohort_count": 7,
+        "point_mae": 7.114433020802568,
+        "empirical_upper_coverage": 0.7142857142857143,
+        "coverage_guarantee": false
+      },
+      "activation": {
+        "selected_queue_time_pressure": 0,
+        "selected_queue_joint_scarce_time_value": 0,
+        "sla_reason_counts": {},
+        "continuation_reason_counts": {},
+        "generation_cap_reductions": 0,
+        "minimum_generation_denials": 0,
+        "retry_sla_reason_counts": {}
+      },
+      "emission": {
+        "maximum_answer_elapsed_seconds": 84.79173638599968,
+        "maximum_on_time_answer_elapsed_seconds": 84.79173638599968
+      },
+      "accounting": {
+        "local_timeout_holds": 1,
+        "local_held_reservation_tokens": 1052.4,
+        "actual_provider_cost_for_held_calls": 91.2,
+        "runtime_conservative_charge": 2622.8,
+        "matched_physical_calls": 9
+      }
+    },
+    "short_adaptive_large_plain": {
+      "model": "qwen3.8-27b-noreason",
+      "sla_policy": "adaptive",
+      "phase": "short",
+      "time_limit_seconds": 90,
+      "scheduled": 16,
+      "visited": 12,
+      "unattempted": 4,
+      "provider_attempted_tasks": 7,
+      "raw_graded_reward": 6,
+      "on_time_reward": 6,
+      "maximum_reward": 30,
+      "on_time_solved": 2,
+      "raw_solved": 2,
+      "negative_answered": 0,
+      "positive_wrong_answer": 1,
+      "late_answers": 0,
+      "unknown_answer_timestamps": 0,
+      "cost": 676.3,
+      "calls": 7,
+      "usage_unknown_calls": 0,
+      "local_nonreconciled_calls": 0,
+      "pending_calls": 0,
+      "provider_responses_after_container_exit": 0,
+      "container_seconds": 75.53100000000268,
+      "relay_drain_seconds": 0.030999999995401595,
+      "total_observed_seconds": 75.75,
+      "on_time_reward_per_container_second": 0.07943758192000354,
+      "watchdog_triggered": false,
+      "returncode": 0,
+      "time_forecast": {
+        "same_complete_cohort_count": 5,
+        "point_mae": 3.0514855154637166,
+        "empirical_upper_coverage": 1.0,
+        "coverage_guarantee": false
+      },
+      "activation": {
+        "selected_queue_time_pressure": 11,
+        "selected_queue_joint_scarce_time_value": 11,
+        "sla_reason_counts": {
+          "other_tasks_have_higher_joint_value": 2,
+          "minimum_generation_exceeds_time": 6,
+          "generation_cap_reduced_for_time": 2
+        },
+        "continuation_reason_counts": {
+          "other_tasks_have_higher_joint_value": 2
+        },
+        "generation_cap_reductions": 2,
+        "minimum_generation_denials": 6,
+        "retry_sla_reason_counts": {
+          "sla_other_tasks_have_higher_joint_value": 2
+        }
+      },
+      "emission": {
+        "maximum_answer_elapsed_seconds": 60.847656396001184,
+        "maximum_on_time_answer_elapsed_seconds": 60.847656396001184
+      },
+      "accounting": {
+        "local_timeout_holds": 0,
+        "local_held_reservation_tokens": 0.0,
+        "actual_provider_cost_for_held_calls": 0.0,
+        "runtime_conservative_charge": 676.3,
+        "matched_physical_calls": 7
+      }
+    },
+    "short_off_small_reason": {
+      "model": "qwen3.6-35b-a3b",
+      "sla_policy": "off",
+      "phase": "short",
+      "time_limit_seconds": 90,
+      "scheduled": 16,
+      "visited": 6,
+      "unattempted": 10,
+      "provider_attempted_tasks": 6,
+      "raw_graded_reward": 10,
+      "on_time_reward": 10,
+      "maximum_reward": 30,
+      "on_time_solved": 3,
+      "raw_solved": 3,
+      "negative_answered": 0,
+      "positive_wrong_answer": 2,
+      "late_answers": 0,
+      "unknown_answer_timestamps": 0,
+      "cost": 6013.0,
+      "calls": 7,
+      "usage_unknown_calls": 0,
+      "local_nonreconciled_calls": 1,
+      "pending_calls": 0,
+      "provider_responses_after_container_exit": 1,
+      "container_seconds": 94.34399999999732,
+      "relay_drain_seconds": 5.109000000004016,
+      "total_observed_seconds": 99.625,
+      "on_time_reward_per_container_second": 0.10599508182820618,
+      "watchdog_triggered": false,
+      "returncode": 0,
+      "time_forecast": {
+        "same_complete_cohort_count": 5,
+        "point_mae": 6.430856393570936,
+        "empirical_upper_coverage": 0.8,
+        "coverage_guarantee": false
+      },
+      "activation": {
+        "selected_queue_time_pressure": 0,
+        "selected_queue_joint_scarce_time_value": 0,
+        "sla_reason_counts": {},
+        "continuation_reason_counts": {},
+        "generation_cap_reductions": 0,
+        "minimum_generation_denials": 0,
+        "retry_sla_reason_counts": {}
+      },
+      "emission": {
+        "maximum_answer_elapsed_seconds": 82.54256556499968,
+        "maximum_on_time_answer_elapsed_seconds": 82.54256556499968
+      },
+      "accounting": {
+        "local_timeout_holds": 1,
+        "local_held_reservation_tokens": 6493.8,
+        "actual_provider_cost_for_held_calls": 888.0,
+        "runtime_conservative_charge": 11618.8,
+        "matched_physical_calls": 7
+      }
+    },
+    "short_adaptive_large_reason": {
+      "model": "qwen3.8-27b",
+      "sla_policy": "adaptive",
+      "phase": "short",
+      "time_limit_seconds": 90,
+      "scheduled": 16,
+      "visited": 11,
+      "unattempted": 5,
+      "provider_attempted_tasks": 11,
+      "raw_graded_reward": 18,
+      "on_time_reward": 18,
+      "maximum_reward": 30,
+      "on_time_solved": 6,
+      "raw_solved": 6,
+      "negative_answered": 0,
+      "positive_wrong_answer": 2,
+      "late_answers": 0,
+      "unknown_answer_timestamps": 0,
+      "cost": 3216.9,
+      "calls": 11,
+      "usage_unknown_calls": 0,
+      "local_nonreconciled_calls": 0,
+      "pending_calls": 0,
+      "provider_responses_after_container_exit": 0,
+      "container_seconds": 79.54699999999866,
+      "relay_drain_seconds": 0.5160000000032596,
+      "total_observed_seconds": 80.23500000000058,
+      "on_time_reward_per_container_second": 0.2262813179629691,
+      "watchdog_triggered": false,
+      "returncode": 0,
+      "time_forecast": {
+        "same_complete_cohort_count": 10,
+        "point_mae": 3.1794483351910605,
+        "empirical_upper_coverage": 1.0,
+        "coverage_guarantee": false
+      },
+      "activation": {
+        "selected_queue_time_pressure": 11,
+        "selected_queue_joint_scarce_time_value": 11,
+        "sla_reason_counts": {
+          "generation_cap_reduced_for_time": 11,
+          "global_deadline_insufficient": 1
+        },
+        "continuation_reason_counts": {
+          "global_deadline_insufficient": 1
+        },
+        "generation_cap_reductions": 11,
+        "minimum_generation_denials": 0,
+        "retry_sla_reason_counts": {
+          "sla_global_deadline_insufficient": 1
+        }
+      },
+      "emission": {
+        "maximum_answer_elapsed_seconds": 65.61655686800077,
+        "maximum_on_time_answer_elapsed_seconds": 65.61655686800077
+      },
+      "accounting": {
+        "local_timeout_holds": 0,
+        "local_held_reservation_tokens": 0.0,
+        "actual_provider_cost_for_held_calls": 0.0,
+        "runtime_conservative_charge": 3216.9,
+        "matched_physical_calls": 11
+      }
+    },
+    "short_adaptive_small_plain": {
+      "model": "qwen3.6-35b-a3b-noreason",
+      "sla_policy": "adaptive",
+      "phase": "short",
+      "time_limit_seconds": 90,
+      "scheduled": 16,
+      "visited": 14,
+      "unattempted": 2,
+      "provider_attempted_tasks": 12,
+      "raw_graded_reward": 11,
+      "on_time_reward": 11,
+      "maximum_reward": 30,
+      "on_time_solved": 4,
+      "raw_solved": 4,
+      "negative_answered": 0,
+      "positive_wrong_answer": 4,
+      "late_answers": 0,
+      "unknown_answer_timestamps": 0,
+      "cost": 2140.8,
+      "calls": 14,
+      "usage_unknown_calls": 0,
+      "local_nonreconciled_calls": 0,
+      "pending_calls": 0,
+      "provider_responses_after_container_exit": 0,
+      "container_seconds": 74.11000000000058,
+      "relay_drain_seconds": 0.4690000000045984,
+      "total_observed_seconds": 74.76600000000326,
+      "on_time_reward_per_container_second": 0.14842801241397804,
+      "watchdog_triggered": false,
+      "returncode": 0,
+      "time_forecast": {
+        "same_complete_cohort_count": 10,
+        "point_mae": 3.9271455799012713,
+        "empirical_upper_coverage": 0.9,
+        "coverage_guarantee": false
+      },
+      "activation": {
+        "selected_queue_time_pressure": 13,
+        "selected_queue_joint_scarce_time_value": 13,
+        "sla_reason_counts": {
+          "other_tasks_have_higher_joint_value": 2,
+          "minimum_generation_exceeds_time": 2,
+          "generation_cap_reduced_for_time": 5,
+          "continuation_value_sufficient": 1,
+          "global_deadline_insufficient": 1
+        },
+        "continuation_reason_counts": {
+          "other_tasks_have_higher_joint_value": 2,
+          "continuation_value_sufficient": 1,
+          "global_deadline_insufficient": 1
+        },
+        "generation_cap_reductions": 5,
+        "minimum_generation_denials": 2,
+        "retry_sla_reason_counts": {
+          "sla_other_tasks_have_higher_joint_value": 2,
+          "sla_global_deadline_insufficient": 1
+        }
+      },
+      "emission": {
+        "maximum_answer_elapsed_seconds": 68.81583318599951,
+        "maximum_on_time_answer_elapsed_seconds": 68.81583318599951
+      },
+      "accounting": {
+        "local_timeout_holds": 0,
+        "local_held_reservation_tokens": 0.0,
+        "actual_provider_cost_for_held_calls": 0.0,
+        "runtime_conservative_charge": 2140.8,
+        "matched_physical_calls": 14
+      }
+    },
+    "short_off_large_plain": {
+      "model": "qwen3.8-27b-noreason",
+      "sla_policy": "off",
+      "phase": "short",
+      "time_limit_seconds": 90,
+      "scheduled": 16,
+      "visited": 16,
+      "unattempted": 0,
+      "provider_attempted_tasks": 16,
+      "raw_graded_reward": 20,
+      "on_time_reward": 20,
+      "maximum_reward": 30,
+      "on_time_solved": 8,
+      "raw_solved": 8,
+      "negative_answered": 0,
+      "positive_wrong_answer": 2,
+      "late_answers": 0,
+      "unknown_answer_timestamps": 0,
+      "cost": 2801.2,
+      "calls": 18,
+      "usage_unknown_calls": 0,
+      "local_nonreconciled_calls": 1,
+      "pending_calls": 0,
+      "provider_responses_after_container_exit": 1,
+      "container_seconds": 94.48500000000058,
+      "relay_drain_seconds": 2.2969999999986612,
+      "total_observed_seconds": 96.95300000000134,
+      "on_time_reward_per_container_second": 0.21167381065777507,
+      "watchdog_triggered": false,
+      "returncode": 0,
+      "time_forecast": {
+        "same_complete_cohort_count": 15,
+        "point_mae": 3.1898771189291977,
+        "empirical_upper_coverage": 0.9333333333333333,
+        "coverage_guarantee": false
+      },
+      "activation": {
+        "selected_queue_time_pressure": 0,
+        "selected_queue_joint_scarce_time_value": 0,
+        "sla_reason_counts": {},
+        "continuation_reason_counts": {},
+        "generation_cap_reductions": 0,
+        "minimum_generation_denials": 0,
+        "retry_sla_reason_counts": {}
+      },
+      "emission": {
+        "maximum_answer_elapsed_seconds": 88.27570595200086,
+        "maximum_on_time_answer_elapsed_seconds": 88.27570595200086
+      },
+      "accounting": {
+        "local_timeout_holds": 1,
+        "local_held_reservation_tokens": 2817.5,
+        "actual_provider_cost_for_held_calls": 347.9,
+        "runtime_conservative_charge": 5270.8,
+        "matched_physical_calls": 18
+      }
+    },
+    "short_adaptive_small_reason": {
+      "model": "qwen3.6-35b-a3b",
+      "sla_policy": "adaptive",
+      "phase": "short",
+      "time_limit_seconds": 90,
+      "scheduled": 16,
+      "visited": 8,
+      "unattempted": 8,
+      "provider_attempted_tasks": 7,
+      "raw_graded_reward": 12,
+      "on_time_reward": 12,
+      "maximum_reward": 30,
+      "on_time_solved": 3,
+      "raw_solved": 3,
+      "negative_answered": 0,
+      "positive_wrong_answer": 0,
+      "late_answers": 0,
+      "unknown_answer_timestamps": 0,
+      "cost": 3223.7,
+      "calls": 7,
+      "usage_unknown_calls": 0,
+      "local_nonreconciled_calls": 0,
+      "pending_calls": 0,
+      "provider_responses_after_container_exit": 0,
+      "container_seconds": 84.09399999999732,
+      "relay_drain_seconds": 0.20399999999790452,
+      "total_observed_seconds": 84.46899999999732,
+      "on_time_reward_per_container_second": 0.14269745760696817,
+      "watchdog_triggered": false,
+      "returncode": 0,
+      "time_forecast": {
+        "same_complete_cohort_count": 3,
+        "point_mae": 3.233039940854422,
+        "empirical_upper_coverage": 0.6666666666666666,
+        "coverage_guarantee": false
+      },
+      "activation": {
+        "selected_queue_time_pressure": 7,
+        "selected_queue_joint_scarce_time_value": 7,
+        "sla_reason_counts": {
+          "generation_cap_reduced_for_time": 5,
+          "other_tasks_have_higher_joint_value": 1,
+          "global_deadline_insufficient": 3,
+          "minimum_generation_exceeds_time": 1
+        },
+        "continuation_reason_counts": {
+          "other_tasks_have_higher_joint_value": 1,
+          "global_deadline_insufficient": 3
+        },
+        "generation_cap_reductions": 5,
+        "minimum_generation_denials": 1,
+        "retry_sla_reason_counts": {
+          "sla_other_tasks_have_higher_joint_value": 1,
+          "sla_global_deadline_insufficient": 3
+        }
+      },
+      "emission": {
+        "maximum_answer_elapsed_seconds": 51.29150473499976,
+        "maximum_on_time_answer_elapsed_seconds": 51.29150473499976
+      },
+      "accounting": {
+        "local_timeout_holds": 0,
+        "local_held_reservation_tokens": 0.0,
+        "actual_provider_cost_for_held_calls": 0.0,
+        "runtime_conservative_charge": 3223.7,
+        "matched_physical_calls": 7
+      }
+    },
+    "short_off_large_reason": {
+      "model": "qwen3.8-27b",
+      "sla_policy": "off",
+      "phase": "short",
+      "time_limit_seconds": 90,
+      "scheduled": 16,
+      "visited": 10,
+      "unattempted": 6,
+      "provider_attempted_tasks": 10,
+      "raw_graded_reward": 16,
+      "on_time_reward": 16,
+      "maximum_reward": 30,
+      "on_time_solved": 5,
+      "raw_solved": 5,
+      "negative_answered": 0,
+      "positive_wrong_answer": 2,
+      "late_answers": 0,
+      "unknown_answer_timestamps": 0,
+      "cost": 3896.4,
+      "calls": 11,
+      "usage_unknown_calls": 0,
+      "local_nonreconciled_calls": 1,
+      "pending_calls": 0,
+      "provider_responses_after_container_exit": 0,
+      "container_seconds": 94.42199999999866,
+      "relay_drain_seconds": 0.10899999999674037,
+      "total_observed_seconds": 94.73399999999674,
+      "on_time_reward_per_container_second": 0.16945203448349141,
+      "watchdog_triggered": false,
+      "returncode": 0,
+      "time_forecast": {
+        "same_complete_cohort_count": 9,
+        "point_mae": 3.492815078778453,
+        "empirical_upper_coverage": 0.8888888888888888,
+        "coverage_guarantee": false
+      },
+      "activation": {
+        "selected_queue_time_pressure": 0,
+        "selected_queue_joint_scarce_time_value": 0,
+        "sla_reason_counts": {},
+        "continuation_reason_counts": {},
+        "generation_cap_reductions": 0,
+        "minimum_generation_denials": 0,
+        "retry_sla_reason_counts": {}
+      },
+      "emission": {
+        "maximum_answer_elapsed_seconds": 88.62864627700037,
+        "maximum_on_time_answer_elapsed_seconds": 88.62864627700037
+      },
+      "accounting": {
+        "local_timeout_holds": 1,
+        "local_held_reservation_tokens": 6472.7,
+        "actual_provider_cost_for_held_calls": 165.5,
+        "runtime_conservative_charge": 10203.6,
+        "matched_physical_calls": 11
+      }
+    }
+  },
+  "paired": {
+    "full_small_plain": {
+      "delta_on_time_reward": -2,
+      "delta_on_time_solved": -1,
+      "delta_cost": -1000.0,
+      "delta_container_seconds": 20.75,
+      "different_coverage": false
+    },
+    "full_large_plain": {
+      "delta_on_time_reward": 0,
+      "delta_on_time_solved": 0,
+      "delta_cost": 225.4,
+      "delta_container_seconds": 8.218999999997322,
+      "different_coverage": false
+    },
+    "full_small_reason": {
+      "delta_on_time_reward": -2,
+      "delta_on_time_solved": -1,
+      "delta_cost": 973.1,
+      "delta_container_seconds": 25.985000000000582,
+      "different_coverage": false
+    },
+    "full_large_reason": {
+      "delta_on_time_reward": 0,
+      "delta_on_time_solved": 0,
+      "delta_cost": 1494.7,
+      "delta_container_seconds": 23.015999999995984,
+      "different_coverage": false
+    },
+    "short_small_plain": {
+      "delta_on_time_reward": 3,
+      "delta_on_time_solved": 2,
+      "delta_cost": 479.2,
+      "delta_container_seconds": -20.889999999999418,
+      "different_coverage": true
+    },
+    "short_large_plain": {
+      "delta_on_time_reward": -14,
+      "delta_on_time_solved": -6,
+      "delta_cost": -2124.9,
+      "delta_container_seconds": -18.953999999997905,
+      "different_coverage": true
+    },
+    "short_small_reason": {
+      "delta_on_time_reward": 2,
+      "delta_on_time_solved": 0,
+      "delta_cost": -2789.3,
+      "delta_container_seconds": -10.25,
+      "different_coverage": true
+    },
+    "short_large_reason": {
+      "delta_on_time_reward": 2,
+      "delta_on_time_solved": 1,
+      "delta_cost": -679.5,
+      "delta_container_seconds": -14.875,
+      "different_coverage": true
+    }
+  },
+  "audit": {
+    "runner_suite_and_archived_runtime_match": true,
+    "all_processes_exit_zero": true,
+    "watchdogs": 0,
+    "reserved": 234,
+    "provider_reconciled": 234,
+    "provider_errors": 0,
+    "proxy_denials": 0,
+    "token_breaches": 0,
+    "pending": 0,
+    "dropped_task_rows": 0,
+    "per_arm": {
+      "full_off_small_plain": {
+        "ledger_proxy_provider_units_match": true,
+        "local_charge_equals_actual_plus_hold_difference": true,
+        "cap_model_task_order_match": true,
+        "peak_committed_tokens": 6692.7,
+        "trace_visits": 16,
+        "trace_sha256": "809b8e0c16c937637d3c18a493e1418b21d2db3b3f6df0040404d75c99559884",
+        "ledger_sha256": "4bd1f9bc7cbb61698894762f46ade4a2efa74e182650d4b1b12a490a7be30356"
+      },
+      "full_adaptive_large_plain": {
+        "ledger_proxy_provider_units_match": true,
+        "local_charge_equals_actual_plus_hold_difference": true,
+        "cap_model_task_order_match": true,
+        "peak_committed_tokens": 5591.7,
+        "trace_visits": 16,
+        "trace_sha256": "8f5573692b0f717b97b633a375b8c4ae838db2970d40a3a455c452a9ef3c0958",
+        "ledger_sha256": "ff174145f8ab78b58e91e52e7682634f6c5eb2e83604257a68ffb760822a5ca5"
+      },
+      "full_off_small_reason": {
+        "ledger_proxy_provider_units_match": true,
+        "local_charge_equals_actual_plus_hold_difference": true,
+        "cap_model_task_order_match": true,
+        "peak_committed_tokens": 18211.3,
+        "trace_visits": 16,
+        "trace_sha256": "62e48006e0796167f3e7fdc6b148b689058d563df3accae41e2e18829b378903",
+        "ledger_sha256": "11b10878466dcb76167c555b4c8ea52b12c73feec739589a81214262d6fa55c3"
+      },
+      "full_adaptive_large_reason": {
+        "ledger_proxy_provider_units_match": true,
+        "local_charge_equals_actual_plus_hold_difference": true,
+        "cap_model_task_order_match": true,
+        "peak_committed_tokens": 18861.8,
+        "trace_visits": 16,
+        "trace_sha256": "e17e3255a664752cf8be9444addb83bbaa31de6a01d8014b9aa4a4354ae3bc42",
+        "ledger_sha256": "da455e277c18f6ef49d2f28646f34797b7ca57dc44ad7600b4f0e0b5dc5677b9"
+      },
+      "full_adaptive_small_plain": {
+        "ledger_proxy_provider_units_match": true,
+        "local_charge_equals_actual_plus_hold_difference": true,
+        "cap_model_task_order_match": true,
+        "peak_committed_tokens": 6308.7,
+        "trace_visits": 16,
+        "trace_sha256": "5cf3057fe2038d7ed7bea3a145c79a9bd27b6fdea771f4def5b587c4228453a6",
+        "ledger_sha256": "32d947c4853e7156c37d4f616916340522c3163ca3b807d46c935fd99fd8fda3"
+      },
+      "full_off_large_plain": {
+        "ledger_proxy_provider_units_match": true,
+        "local_charge_equals_actual_plus_hold_difference": true,
+        "cap_model_task_order_match": true,
+        "peak_committed_tokens": 5257.0,
+        "trace_visits": 16,
+        "trace_sha256": "f6bf79c5ea7b20fbad30d9387d1a61e1a1faa7e9cdc99277d355abfab4d4e58e",
+        "ledger_sha256": "2986a2d5119b36bf98e5affdb276622d952e069f83a09b33e57655f25824d54c"
+      },
+      "full_adaptive_small_reason": {
+        "ledger_proxy_provider_units_match": true,
+        "local_charge_equals_actual_plus_hold_difference": true,
+        "cap_model_task_order_match": true,
+        "peak_committed_tokens": 18791.5,
+        "trace_visits": 16,
+        "trace_sha256": "edc5f6f2e0d2de505745a7a98834433fe6cb0f82ef95602d9af275646b8fd73a",
+        "ledger_sha256": "2aedbca7ef18dd3c8ee1ce363f0655168fdcf060b8e3f29d9af29d6f7bd65e42"
+      },
+      "full_off_large_reason": {
+        "ledger_proxy_provider_units_match": true,
+        "local_charge_equals_actual_plus_hold_difference": true,
+        "cap_model_task_order_match": true,
+        "peak_committed_tokens": 13892.5,
+        "trace_visits": 16,
+        "trace_sha256": "e0c25670ee17cec434fb9a5e82b0b9da96a52d10e9490c5475823617fd814519",
+        "ledger_sha256": "716e300643b30615b44ad63edc0f4fa660ed4a0f5540b4910dc71653eafa8693"
+      },
+      "short_off_small_plain": {
+        "ledger_proxy_provider_units_match": true,
+        "local_charge_equals_actual_plus_hold_difference": true,
+        "cap_model_task_order_match": true,
+        "peak_committed_tokens": 2622.8,
+        "trace_visits": 8,
+        "trace_sha256": "76ea921a6304e25078acddcfe23661daceefaf984ed790301fb3a66b80217674",
+        "ledger_sha256": "5765b02adfcff32dedab9cbae586d71558c2a4798083adc28cd1cfbe5c0520e8"
+      },
+      "short_adaptive_large_plain": {
+        "ledger_proxy_provider_units_match": true,
+        "local_charge_equals_actual_plus_hold_difference": true,
+        "cap_model_task_order_match": true,
+        "peak_committed_tokens": 1602.5,
+        "trace_visits": 13,
+        "trace_sha256": "07cee39a405bee178ea4a7ebcb0fe72ccb4f7ca918eaff13c2fd8bad972a85d2",
+        "ledger_sha256": "c5ac7dda8ffdce092c23dcb18d9cc403b7d5a19bd123a8a35042c8c3688f9cfa"
+      },
+      "short_off_small_reason": {
+        "ledger_proxy_provider_units_match": true,
+        "local_charge_equals_actual_plus_hold_difference": true,
+        "cap_model_task_order_match": true,
+        "peak_committed_tokens": 11618.8,
+        "trace_visits": 6,
+        "trace_sha256": "be4ee5710ac2a502fb1ee7b5a773778b936450d4c102b075eddaf9d62dc64d46",
+        "ledger_sha256": "71871847725ada01d0cd1e3d3d989369c52b92e45b754ad52c02d61f54824a1f"
+      },
+      "short_adaptive_large_reason": {
+        "ledger_proxy_provider_units_match": true,
+        "local_charge_equals_actual_plus_hold_difference": true,
+        "cap_model_task_order_match": true,
+        "peak_committed_tokens": 5107.7,
+        "trace_visits": 11,
+        "trace_sha256": "a51bbd8bd45d49aa9d35182e1a99663d4cf4d7cf1645a770455625e3f25a7cb5",
+        "ledger_sha256": "c3b6effe3212f6d84f87d2bd9d2cf624b7745efb9ee7d74e98863d859574424d"
+      },
+      "short_adaptive_small_plain": {
+        "ledger_proxy_provider_units_match": true,
+        "local_charge_equals_actual_plus_hold_difference": true,
+        "cap_model_task_order_match": true,
+        "peak_committed_tokens": 2688.6,
+        "trace_visits": 15,
+        "trace_sha256": "8912c9d9f92d062c18bb566adaf02c559f674c797d25e4affaa679f6b98f6eb5",
+        "ledger_sha256": "612f808d9ea8912e687b6d956df80ddfb779a73e7518474b8827ea87748cb7d1"
+      },
+      "short_off_large_plain": {
+        "ledger_proxy_provider_units_match": true,
+        "local_charge_equals_actual_plus_hold_difference": true,
+        "cap_model_task_order_match": true,
+        "peak_committed_tokens": 5270.8,
+        "trace_visits": 16,
+        "trace_sha256": "4d0107d435e36febf95464d7584b70a26702bbd183949f129846690851ac118a",
+        "ledger_sha256": "2cf4dffa7fae9a8839cac8664d881d5ce7df2cbd2bd2a3f28f639a7874b9ecd5"
+      },
+      "short_adaptive_small_reason": {
+        "ledger_proxy_provider_units_match": true,
+        "local_charge_equals_actual_plus_hold_difference": true,
+        "cap_model_task_order_match": true,
+        "peak_committed_tokens": 7515.8,
+        "trace_visits": 8,
+        "trace_sha256": "5536c261f63260dc1bf5ebf0751fb7fd4a9447ee4dc2e191237095e58de6649c",
+        "ledger_sha256": "21423cc5d63c1f863f723096d9e0b4f5e488669749df1642c42966a7f3b01859"
+      },
+      "short_off_large_reason": {
+        "ledger_proxy_provider_units_match": true,
+        "local_charge_equals_actual_plus_hold_difference": true,
+        "cap_model_task_order_match": true,
+        "peak_committed_tokens": 10203.6,
+        "trace_visits": 10,
+        "trace_sha256": "c317136e791f9ecf3d73a1d4a2f000a328933a2f55090d0d958aeac600cb7497",
+        "ledger_sha256": "316a22bd5549cfbb8805d57914a71812d2679686159b14f56d6e01d9e5bfa203"
+      }
+    },
+    "trace_visits": 215,
+    "physical_local_calls": 234,
+    "total_provider_charge": 81137.1,
+    "local_timeout_holds": 4,
+    "local_held_reservation_tokens": 16836.4,
+    "actual_provider_cost_for_held_calls": 1492.6,
+    "late_answers": 0,
+    "unknown_answer_timestamps": 0,
+    "time_forecasts_independently_recomputed": true
+  },
+  "method_limits": [
+    "One small development panel and one realization per arm; differences include provider/model variability. No universal speedup or accuracy gain is established.",
+    "Full runs had no selected-queue time pressure. Short runs are intentionally censored by the agent90-second deadline.",
+    "On-time scores use recorded agent-relative answer emission times. Container wall time additionally includes startup and shutdown; relay drain is separate.",
+    "Provider usage after a local timeout remains charged. Local reservation holds are not extra provider charges or measured-zero calls.",
+    "Time-MAE/upper coverage use completed, known, non-deadline-limited attempts. Short-arm cohorts differ; their MAEs are not paired accuracy comparisons.",
+    "Empirical upper coverage is descriptive, not a guarantee. Historical priors used old public100, excluding final20 and this panel.",
+    "Search grading uses exact accepted spans; a longer factually correct span can be a grading mismatch.",
+    "Queue-pressure counts describe selected trace visits, not every rejected scheduler candidate."
+  ],
+  "confirmed_regression": {
+    "arm": "short_adaptive_large_plain",
+    "off_points": 20,
+    "adaptive_points": 6,
+    "off_solved": 8,
+    "adaptive_solved": 2,
+    "generation_minimum_denials": 6,
+    "cause": "Queue task forecasts used expected token cost, while the generation guard used the ledger worst-case UTF-8 input reservation as expected latency cost; admitted tasks were rejected before API.",
+    "additional_risk": "A15.831s math request with42.8 weighted tokens yielded a17.88 raw ratio, clipped to16. The unshrunk one-sample tail enlarged later math forecasts.",
+    "counterfactual_limit": "Off-arm successes show feasibility in a separate realization; they do not prove all14 lost points would be recovered by a fix."
+  }
+}

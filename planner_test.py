@@ -12,33 +12,38 @@ class PlannerTests(unittest.TestCase):
         self.assertEqual(len(set(MODELS.values())), 4)
         self.assertTrue(all(name.startswith("qwen3.") for name in MODELS.values()))
 
-    def test_missing_person_is_skipped_before_spending_tokens(self):
+    def test_missing_expected_person_filename_is_not_proof(self):
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp)
             (workspace / "kb").mkdir()
             task = {"task_id": "missing", "task_type": "search", "reward": 5,
                     "instruction": "In which year was Irina Smith born?"}
-            self.assertEqual(impossible_reason(task, workspace), "named person missing")
-            self.assertEqual(TaskEstimator().estimate(task, workspace).priority, 0)
+            self.assertIsNone(impossible_reason(task, workspace))
+            self.assertGreater(TaskEstimator().estimate(task, workspace).priority, 0)
 
-    def test_missing_coding_source_is_skipped(self):
+    def test_missing_coding_source_can_be_created(self):
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp)
             (workspace / "test_mylib.py").write_text("pass\n", encoding="utf-8")
             task = {"task_type": "coding", "instruction": "Fix mylib.py", "reward": 5}
-            self.assertEqual(impossible_reason(task, workspace), "missing source")
+            self.assertIsNone(impossible_reason(task, workspace))
 
-    def test_contradictory_coding_assertions_are_skipped(self):
+    def test_contradictory_coding_assertions_require_explicit_contract(self):
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp)
             (workspace / "mylib.py").write_text("def f(x): return x\n", encoding="utf-8")
             (workspace / "test_mylib.py").write_text(
-                "import mylib as m\n"
-                "def test(self):\n"
-                "    self.assertEqual(m.f(1), 1)\n"
-                "    self.assertEqual(m.f(1), 2)\n", encoding="utf-8")
+                "import mylib as m\nimport unittest\n"
+                "class TestContract(unittest.TestCase):\n"
+                "    def test(self):\n"
+                "        self.assertEqual(m.f(1), 1)\n"
+                "        self.assertEqual(m.f(1), 2)\n", encoding="utf-8")
             task = {"task_type": "coding", "instruction": "Fix mylib.py", "reward": 5}
-            self.assertEqual(impossible_reason(task, workspace), "contradictory tests")
+            self.assertIsNone(impossible_reason(task, workspace))
+            task["instruction"] += ". Functions must be stateless and deterministic."
+            self.assertIsNone(impossible_reason(task, workspace))
+            task["instruction"] += " Functions must return built-in integers."
+            self.assertIsNotNone(impossible_reason(task, workspace))
 
     def test_stateful_function_is_not_declared_impossible(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -54,13 +59,54 @@ class PlannerTests(unittest.TestCase):
             task = {"task_type": "coding", "instruction": "Fix mylib.py", "reward": 5}
             self.assertIsNone(impossible_reason(task, workspace))
 
-    def test_missing_required_csv_column_is_skipped(self):
+    def test_missing_expected_csv_column_is_not_proof(self):
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp)
             (workspace / "sales.csv").write_text("product,month\nwidget,7\n", encoding="utf-8")
             task = {"task_type": "data_analysis", "reward": 3,
                     "instruction": "How many units of product 'widget' were sold in months 7 through 8 inclusive?"}
-            self.assertEqual(impossible_reason(task, workspace), "required CSV columns missing")
+            self.assertIsNone(impossible_reason(task, workspace))
+
+    def test_alternate_layouts_and_derived_data_are_not_hard_skipped(self):
+        fixtures = [
+            ("search", "In which year was Lina Zorina born?",
+             {"people/biography.md": "Lina Zorina was born on 14 March 1991."}),
+            ("search", "In which city is the headquarters of Sergei Garcia's employer?",
+             {"kb/person_sergei_garcia.md": "Employer: Klen Lab", "kb/notes.md": "Klen Lab headquarters: Tomsk"}),
+            ("data_analysis", "How many units of product 'A' were sold in months 1 through 2 inclusive? "
+             "Quantity equals total divided by unit_price; no discounts.",
+             {"transactions.csv": "product,month,total,unit_price\nA,1,120,30\nA,2,175,25\n"}),
+            ("data_analysis", "How many units of product 'A' were sold in months 1 through 2 inclusive? "
+             "item means product, period means month, quantity means units.",
+             {"orders.csv": "item,period,quantity\nA,1,4\nA,2,7\n"}),
+            ("coding", "Fix mylib.clamp and run python -m unittest discover -s tests.",
+             {"mylib/__init__.py": "def clamp(x, lo, hi): return min(lo, max(hi, x))\n",
+              "tests/test_clamp.py": "from mylib import clamp\nassert clamp(4,0,10)==4\n"}),
+        ]
+        for kind, instruction, files in fixtures:
+            with self.subTest(instruction=instruction), tempfile.TemporaryDirectory() as tmp:
+                workspace = Path(tmp)
+                for name, text in files.items():
+                    path = workspace / name
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_text(text, encoding="utf-8")
+                task = {"task_type": kind, "instruction": instruction, "reward": 2}
+                self.assertIsNone(impossible_reason(task, workspace))
+                self.assertGreater(TaskEstimator().estimate(task, workspace).priority, 0)
+
+    def test_contradiction_check_respects_keywords_and_contract_negation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            (workspace / "mylib.py").write_text("def f(x=0): return x\n", encoding="utf-8")
+            tests = workspace / "test_mylib.py"
+            tests.write_text("import mylib as m\ndef test(self):\n"
+                             "    self.assertEqual(m.f(x=1), 1)\n"
+                             "    self.assertEqual(m.f(x=2), 2)\n", encoding="utf-8")
+            task = {"task_type": "coding", "instruction": "Functions must be stateless and deterministic."}
+            self.assertIsNone(impossible_reason(task, workspace))
+            tests.write_text(tests.read_text(encoding="utf-8").replace("x=2", "x=1"), encoding="utf-8")
+            task["instruction"] = "No functions must be stateless and deterministic. Stateful repairs are allowed."
+            self.assertIsNone(impossible_reason(task, workspace))
 
     def test_csv_aggregates_do_not_need_model_tokens(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -71,6 +117,28 @@ class PlannerTests(unittest.TestCase):
                 "3,west,widget,2,4,20\n", encoding="utf-8")
             self.assertEqual(csv_answer("What is the average price of widget orders?", workspace), "20")
             self.assertEqual(csv_answer("How many units of widget were sold in the west region?", workspace), "7")
+
+    def test_single_csv_accepts_natural_table_names_without_rewriting_values(self):
+        class FakeLLM:
+            def __init__(self, query):
+                self.query = query
+            async def ask(self, *_args, **_kwargs):
+                return self.query
+
+        for filename in ("transactions.csv", "Sales.csv", "DATA.csv", "sqlite_sales.csv"):
+            with self.subTest(filename=filename), tempfile.TemporaryDirectory() as tmp:
+                workspace = Path(tmp)
+                (workspace / filename).write_text(
+                    "product,total,unit_price\nFROM sales,120,30\nFROM sales,175,25\nother,90,10\n",
+                    encoding="utf-8")
+                task = {"task_type": "data_analysis", "instruction": "Compute quantity as total/unit_price for product FROM sales."}
+                table_names = ["data", "sales", "main"]
+                if not Path(filename).stem.casefold().startswith("sqlite_"):
+                    table_names.append(Path(filename).stem)
+                for table in table_names:
+                    query = 'SELECT SUM(total/unit_price) FROM "' + table + '" WHERE product=\'FROM sales\''
+                    with self.subTest(table=table):
+                        self.assertEqual(asyncio.run(model_answer(FakeLLM(query), task, workspace)), "11")
 
     def test_cost_and_answer_rate_adapt_after_observation(self):
         with tempfile.TemporaryDirectory() as tmp:

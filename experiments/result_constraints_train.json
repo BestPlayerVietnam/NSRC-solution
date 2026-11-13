@@ -1,0 +1,267 @@
+{
+  "scope": "suite_policy TRAIN only; no CAL/TEST oracle values decoded; no task code executed",
+  "api_calls": 0,
+  "summary": {
+    "train_tasks": 64,
+    "coding_tasks": 16,
+    "answerable": 48,
+    "unanswerable": 16,
+    "coding_unanswerable": 4,
+    "hard_certificates": 2,
+    "false_hard_skips": 0,
+    "correct_hard_certificates": 2
+  },
+  "coding_results": [
+    {
+      "id": "policy_0816f5d95f86dfea",
+      "answerable": false,
+      "analysis": {
+        "hard_impossible": false,
+        "reason": null,
+        "flags": [
+          "incomplete_analysis"
+        ],
+        "evidence": [
+          {
+            "detail": "Unknown state, class, async, context manager, or callback"
+          }
+        ]
+      }
+    },
+    {
+      "id": "policy_23939cba975eae17",
+      "answerable": true,
+      "analysis": {
+        "hard_impossible": false,
+        "reason": null,
+        "flags": [],
+        "evidence": []
+      }
+    },
+    {
+      "id": "policy_2eb93b6174352313",
+      "answerable": false,
+      "analysis": {
+        "hard_impossible": true,
+        "reason": "One captured built-in result has incompatible required constraints",
+        "flags": [],
+        "evidence": [
+          {
+            "path": "test_contract.py",
+            "test": "test_contract",
+            "binding_line": 3,
+            "variable": "value",
+            "builtin_type": "int",
+            "measure": "int",
+            "lower_inclusive": 1,
+            "upper_inclusive": 0,
+            "excluded": [],
+            "facts": [
+              {
+                "line": 4,
+                "assert": "assert type(value) is int"
+              },
+              {
+                "line": 5,
+                "assert": "assert value == 0"
+              },
+              {
+                "line": 6,
+                "assert": "assert value > 0"
+              }
+            ],
+            "proof": "Empty integer domain for one captured built-in result; no intervening effects",
+            "assumptions": "Task contract preserves tests, builtins, standard libraries, import hooks and framework"
+          }
+        ]
+      }
+    },
+    {
+      "id": "policy_4dc65dceba82e9e0",
+      "answerable": true,
+      "analysis": {
+        "hard_impossible": false,
+        "reason": null,
+        "flags": [],
+        "evidence": []
+      }
+    },
+    {
+      "id": "policy_51b9ffb4119535e6",
+      "answerable": true,
+      "analysis": {
+        "hard_impossible": false,
+        "reason": null,
+        "flags": [
+          "incomplete_analysis"
+        ],
+        "evidence": [
+          {
+            "detail": "Unknown state, class, async, context manager, or callback"
+          }
+        ]
+      }
+    },
+    {
+      "id": "policy_550bc0b704eae201",
+      "answerable": true,
+      "analysis": {
+        "hard_impossible": false,
+        "reason": null,
+        "flags": [],
+        "evidence": []
+      }
+    },
+    {
+      "id": "policy_5908399caa7cffd0",
+      "answerable": true,
+      "analysis": {
+        "hard_impossible": false,
+        "reason": null,
+        "flags": [],
+        "evidence": []
+      }
+    },
+    {
+      "id": "policy_5e8011389c893ced",
+      "answerable": true,
+      "analysis": {
+        "hard_impossible": false,
+        "reason": null,
+        "flags": [],
+        "evidence": []
+      }
+    },
+    {
+      "id": "policy_62ab3bfa6706510a",
+      "answerable": false,
+      "analysis": {
+        "hard_impossible": false,
+        "reason": null,
+        "flags": [],
+        "evidence": []
+      }
+    },
+    {
+      "id": "policy_63c614d739c114c5",
+      "answerable": false,
+      "analysis": {
+        "hard_impossible": true,
+        "reason": "One captured built-in result has incompatible required constraints",
+        "flags": [],
+        "evidence": [
+          {
+            "path": "tests/unit/test_contract.py",
+            "test": "test_contract",
+            "binding_line": 3,
+            "variable": "value",
+            "builtin_type": "int",
+            "measure": "int",
+            "lower_inclusive": 27,
+            "upper_inclusive": 25,
+            "excluded": [],
+            "facts": [
+              {
+                "line": 4,
+                "assert": "assert type(value) is int"
+              },
+              {
+                "line": 5,
+                "assert": "assert value == 25"
+              },
+              {
+                "line": 6,
+                "assert": "assert value == 27"
+              }
+            ],
+            "proof": "Empty integer domain for one captured built-in result; no intervening effects",
+            "assumptions": "Task contract preserves tests, builtins, standard libraries, import hooks and framework"
+          }
+        ]
+      }
+    },
+    {
+      "id": "policy_7ce34151b8ca016c",
+      "answerable": true,
+      "analysis": {
+        "hard_impossible": false,
+        "reason": null,
+        "flags": [],
+        "evidence": []
+      }
+    },
+    {
+      "id": "policy_81a2302aad15d423",
+      "answerable": true,
+      "analysis": {
+        "hard_impossible": false,
+        "reason": null,
+        "flags": [],
+        "evidence": []
+      }
+    },
+    {
+      "id": "policy_ae5b791aa9807ce8",
+      "answerable": true,
+      "analysis": {
+        "hard_impossible": false,
+        "reason": null,
+        "flags": [],
+        "evidence": []
+      }
+    },
+    {
+      "id": "policy_b32f2d600d570fa8",
+      "answerable": true,
+      "analysis": {
+        "hard_impossible": false,
+        "reason": null,
+        "flags": [
+          "incomplete_analysis"
+        ],
+        "evidence": [
+          {
+            "detail": "Unknown state, class, async, context manager, or callback"
+          }
+        ]
+      }
+    },
+    {
+      "id": "policy_e382a72d8c26c3e1",
+      "answerable": true,
+      "analysis": {
+        "hard_impossible": false,
+        "reason": null,
+        "flags": [],
+        "evidence": []
+      }
+    },
+    {
+      "id": "policy_eb8e194320348a9c",
+      "answerable": true,
+      "analysis": {
+        "hard_impossible": false,
+        "reason": null,
+        "flags": [
+          "incomplete_analysis"
+        ],
+        "evidence": [
+          {
+            "detail": "Unknown state, class, async, context manager, or callback"
+          }
+        ]
+      }
+    }
+  ],
+  "source_sha256": {
+    "result_constraints.py": "41c96c1be5c424055d1514ced680dc4a6c7baf7bc087a1b0a6a3687674085a4c",
+    "manifest.json": "8e77928cc8c001a51970f090039d827ec4715eef74d5c5f6da7a9f7a7d42a5c0",
+    "research_metadata.json": "540b8c760b04bb9bbafdd8cdca53324383272488edd750bb03e2eb6af599fed7",
+    "oracle.json": "1a94ea2565820352317efe93c994e644273e2a65e19be1cce2a201bc8ac9f916"
+  },
+  "limitations": [
+    "Targeted authored TRAIN distribution; not a hidden-final false-positive estimate.",
+    "Builtin list lengths remain unknown because future implementations may mutate lists.",
+    "No runtime integration; no measured model-token saving is claimed."
+  ]
+}
