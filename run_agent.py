@@ -16,7 +16,6 @@ import os
 import re
 import subprocess
 import sys
-import tempfile
 import time
 from pathlib import Path
 from dataclasses import asdict, replace
@@ -1017,8 +1016,8 @@ async def main() -> None:
                         help="frozen cost estimator; execution and retry policy stay unchanged")
     parser.add_argument("--residual-cost-artifact", type=Path,
                         default=Path(__file__).with_name("residual_cost_artifact.json"))
-    parser.add_argument("--trace-file", type=Path,
-                        default=Path(os.environ.get("TRACE_FILE", str(Path(tempfile.gettempdir()) / "nsrc-trajectory.jsonl"))))
+    parser.add_argument("--trace-file", type=Path, default=os.environ.get("TRACE_FILE"),
+                        help="JSONL trace path, defaults to <tasks-dir>/nsrc-trajectory.jsonl")
     args = parser.parse_args()
     budget_source = "CLI --budget"
     if args.budget is None:
@@ -1035,6 +1034,8 @@ async def main() -> None:
     deadline = start + args.time_limit
     print(f"token budget: {args.budget} (source: {budget_source})", flush=True)
     root = args.tasks_dir.resolve()
+    if args.trace_file is None:
+        args.trace_file = root / "nsrc-trajectory.jsonl"
     entries = []
     for task_file in sorted(root.glob("*/task.json")):
         if time.monotonic() >= deadline:
